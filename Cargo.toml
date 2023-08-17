@@ -2,7 +2,7 @@
 name = "actix-htmx"
 version = "0.1.0"
 authors = ["Dave Lewis <dave@dllewis.org"]
-description = "Actix-web middleware for use when developing with htmx"
+description = "Actix Web middleware for use when developing with htmx"
 readme = "README.md"
 keywords = ["actix-web", "middleware", "htmx"]
 license = "MIT OR Apache-2.0"
