@@ -1,0 +1,4 @@
+{% for todo in todos %}
+{% include "todo.html" %}
+{% endfor %}
+<input id="new_todo" type="text" name="name" placeholder="What needs to be done?" required hx-swap-oob="true"/>

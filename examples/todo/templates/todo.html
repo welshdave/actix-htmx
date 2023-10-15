@@ -1,0 +1,11 @@
+<div id="todo-{{ todo.id }}">
+    {% if todo.status == Status::Created %}
+    <a href="#" hx-put="/todo/{{todo.id}}" hx-target="#todos" class="ten"><i class="fa fa-check"></i></a>
+    {% else %}
+    <span>&nbsp;</span>
+    {% endif %}
+    <span id="task-name-{{ todo.id }}" class="eighty">
+        {{ todo.name }}
+    </span>
+    <a href="#" hx-delete="/todo/{{todo.id}}" hx-target="#todos" class="ten"><i class="fa fa-trash-o"></i></a>
+</div>

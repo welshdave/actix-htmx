@@ -4,12 +4,34 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Todo</title>
+    <title>todo</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@next/css/pico.min.css" />
-    <link rel="stylesheet" href="/static/css/site.css" />
-    <script src="https://unpkg.com/htmx.org@1.9.5" integrity="sha384-xcuj3WpfgjlKF+FXhSQFQ0ZNr39ln+hwjN3npfM9VBnUskLolQAcN80McRIVOPuO" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/site.css" />
+    <script src="https://unpkg.com/htmx.org@1.9.6" integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni" crossorigin="anonymous"></script>
 </head>
 <body>
-Hello world!
+    <main class="container" style="background-color: blueviolet">
+            <h1 class="centre-text">
+                todos
+            </h1>
+
+            <form class="centre centre-text" action="/todo" method="post" hx-boost="true" hx-target="#todos">
+                <input class="eighty" id="new_todo" type="text" name="name" placeholder="What needs to be done?" required />
+                <button class="twenty button button-outline" type="submit">
+                    Add
+                </button>
+            </form>
+        <div id="todos" class="centre" style="background: aquamarine">
+            {% for todo in todos %}
+            {% include "todo.html" %}
+            {% endfor %}
+        </div>
+    </main>
 </body>
 </html>
+<script>
+    document.body.addEventListener("message", function(evt){
+        console.log(evt.detail.value);
+    })
+</script>
