@@ -1,0 +1,15 @@
+<div>
+    {% let checked -%}
+    {% if todo.status == Status::Done -%}
+        {% let checked = "checked" -%}
+    {% else -%}
+        {% let checked = "" -%}
+    {% endif -%}
+    <form hx-put="/todo/{{todo.id}}" hx-target="#todos" hx-trigger="changed from:#todo-{{todo.id}}, change">
+        <input type="checkbox" name="completed" id="todo-{{todo.id}}" {{ checked }} />
+        <label for="todo-{{todo.id}}" class="{{ checked }}">
+            {{ todo.name }}
+        </label>
+        <a href="#" hx-delete="/todo/{{todo.id}}" hx-target="#todos" class="delete"><i class="fa fa-trash-o"></i></a>
+    </form>
+</div>

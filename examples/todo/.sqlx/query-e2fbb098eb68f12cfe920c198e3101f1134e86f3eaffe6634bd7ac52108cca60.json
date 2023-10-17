@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE todos SET Status = ?1 WHERE id = ?2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "e2fbb098eb68f12cfe920c198e3101f1134e86f3eaffe6634bd7ac52108cca60"
+}

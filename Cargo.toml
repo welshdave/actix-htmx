@@ -1,20 +1,8 @@
-[package]
-name = "actix-htmx"
-version = "0.1.0"
-authors = ["Dave Lewis <dave@dllewis.org"]
-description = "Actix Web middleware for use when developing with htmx"
-readme = "README.md"
-keywords = ["actix-web", "middleware", "htmx"]
+[workspace]
+members = ["actix-htmx", "examples/*"]
+default-members = ["actix-htmx"]
+resolver = "2"
+
+[workspace.package]
 license = "MIT OR Apache-2.0"
 edition = "2021"
-repository = "https://github.com/welshdave/actix-htmx.git"
-
-[dependencies]
-actix-web = { version = "4", default-features = false }
-futures-util = "0.3"
-indexmap = "2"
-log = "0.4"
-regex = "1"
-
-[dev-dependencies]
-actix-web = { version = "4", default-features = false, features = ["macros"] }

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>todo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@next/css/pico.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/site.css" />
+    <script src="https://unpkg.com/htmx.org@1.9.6" integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni" crossorigin="anonymous"></script>
+</head>
+<body>
+    <main class="container">
+            <h1 class="centre-text">
+                todos
+            </h1>
+
+            <form class="centre centre-text" action="/todo" method="post" hx-boost="true" hx-target="#todos">
+                <input id="new_todo" type="text" name="name" placeholder="What needs to be done?" required />
+                <button class="button button-outline" type="submit">
+                    Add
+                </button>
+            </form>
+        <div id="todos" class="centre">
+            {% for todo in todos %}
+            {% include "todo.html" %}
+            {% endfor %}
+        </div>
+    </main>
+</body>
+</html>
+<script>
+    document.body.addEventListener("message", function(evt){
+        console.log(evt.detail.value);
+    })
+</script>
