@@ -27,14 +27,13 @@ async fn main() -> std::io::Result<()> {
                 Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/static")),
             ))
             .wrap(HtmxMiddleware)
-            .service(web::scope("/")
-                .route("", web::get().to(home)))
+            .service(web::scope("/").route("", web::get().to(home)))
             .service(
                 web::scope("/todo")
                     .service(web::resource("").route(web::post().to(create_todo)))
                     .service(
                         web::resource("{id}")
-                            .route(web::put().to(complete_todo))
+                            .route(web::put().to(update_todo))
                             .route(web::delete().to(delete_todo)),
                     ),
             )

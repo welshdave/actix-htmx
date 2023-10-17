@@ -2,8 +2,8 @@ use crate::domain::Todos;
 
 use crate::routes::{HomeTemplate, TodosTemplate};
 use actix_htmx::HtmxDetails;
-use actix_web::{http::header::ContentType, web, HttpResponse};
-use askama::Template;
+use actix_web::{web, HttpResponse};
+use askama_actix::{TemplateToResponse};
 use sqlx::{Pool, Sqlite};
 
 #[derive(serde::Deserialize)]
@@ -26,14 +26,10 @@ pub async fn create_todo(
 
             if htmx_details.boosted() {
                 let todo_template = TodosTemplate { todos: &todos };
-                HttpResponse::Ok()
-                    .content_type(ContentType::html())
-                    .body(todo_template.render().unwrap())
+                todo_template.to_response()
             } else {
                 let home = HomeTemplate { todos: &todos };
-                HttpResponse::Ok()
-                    .content_type(ContentType::html())
-                    .body(home.render().unwrap())
+                home.to_response()
             }
         }
         Err(e) => HttpResponse::InternalServerError().body(format!("Error: {}", e)),

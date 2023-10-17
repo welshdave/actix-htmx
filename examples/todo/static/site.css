@@ -6,6 +6,10 @@ body {
     height: 100vh;
 }
 
+main {
+    background: aquamarine;
+}
+
 .centre {
     margin: auto;
     width: 50%;
@@ -16,21 +20,12 @@ body {
     text-align: center;
 }
 
-.eighty {
-    width: 80%;
+.checked {
+    text-decoration: line-through;
 }
 
-.ten {
-    width: 10%;
-}
-
-.twenty {
-    width: 20%;
-}
-
-.message.htmx-swapping {
-    opacity: 0;
-    transition: opacity 1s ease-out;
+.delete {
+    float: right;
 }
 
 

@@ -2,17 +2,17 @@ use sqlx::FromRow;
 use std::fmt;
 use uuid::Uuid;
 
-#[derive(PartialEq, sqlx::Type)]
+#[derive(PartialEq, Copy, Clone, sqlx::Type)]
 #[sqlx(rename_all = "snake_case")]
 pub enum Status {
-    Created,
+    Pending,
     Done,
 }
 
 impl fmt::Display for Status {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Status::Created => write!(f, "Created"),
+            Status::Pending => write!(f, "Pending"),
             Status::Done => write!(f, "Done"),
         }
     }
@@ -50,7 +50,7 @@ impl Todos {
             "#,
             new_id,
             name,
-            Status::Created
+            Status::Pending
         )
         .execute(pool)
         .await?;
@@ -71,15 +71,16 @@ impl Todos {
         Ok(())
     }
 
-    pub async fn complete_todo(
+    pub async fn update_todo(
         pool: &sqlx::Pool<sqlx::Sqlite>,
+        status: Status,
         id: Uuid,
     ) -> Result<(), sqlx::Error> {
         sqlx::query!(
             r#"
             UPDATE todos SET Status = ?1 WHERE id = ?2
             "#,
-            Status::Done,
+            status,
             id
         )
         .execute(pool)

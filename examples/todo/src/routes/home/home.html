@@ -11,18 +11,18 @@
     <script src="https://unpkg.com/htmx.org@1.9.6" integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni" crossorigin="anonymous"></script>
 </head>
 <body>
-    <main class="container" style="background-color: blueviolet">
+    <main class="container">
             <h1 class="centre-text">
                 todos
             </h1>
 
             <form class="centre centre-text" action="/todo" method="post" hx-boost="true" hx-target="#todos">
-                <input class="eighty" id="new_todo" type="text" name="name" placeholder="What needs to be done?" required />
-                <button class="twenty button button-outline" type="submit">
+                <input id="new_todo" type="text" name="name" placeholder="What needs to be done?" required />
+                <button class="button button-outline" type="submit">
                     Add
                 </button>
             </form>
-        <div id="todos" class="centre" style="background: aquamarine">
+        <div id="todos" class="centre">
             {% for todo in todos %}
             {% include "todo.html" %}
             {% endfor %}
