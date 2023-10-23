@@ -18,7 +18,12 @@ macro_rules! collection {
 }
 
 #[derive(Clone)]
-pub struct HtmxDetails(Rc<RefCell<HtmxDetailsInner>>);
+pub struct HtmxDetails {
+    inner: Rc<RefCell<HtmxDetailsInner>>,
+    pub is_htmx: bool,
+    pub boosted: bool,
+    pub history_restore_request: bool,
+}
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum TriggerType {
@@ -36,6 +41,11 @@ pub enum SwapType {
     AfterEnd,
     Delete,
     None,
+}
+
+enum DataType {
+    String(Option<String>),
+    Bool(bool),
 }
 
 impl fmt::Display for SwapType {
@@ -57,34 +67,21 @@ struct HtmxDetailsInner {
     standard_triggers: IndexMap<String, String>,
     after_settle_triggers: IndexMap<String, String>,
     after_swap_triggers: IndexMap<String, String>,
-    request_headers: IndexMap<String, Option<String>>,
     response_headers: IndexMap<String, String>,
+    request_headers: IndexMap<String, DataType>,
 }
 
 impl HtmxDetailsInner {
     pub fn new(req: &HttpRequest) -> HtmxDetailsInner {
-        let extract_string = |header: Option<&HeaderValue>| -> Option<String> {
-            match header {
-                Some(header) => {
-                    if let Ok(header) = header.to_str() {
-                        Some(header.to_string())
-                    } else {
-                        None
-                    }
-                }
-                None => None,
-            }
-        };
-
         let request_headers = collection![
-            RequestHeaders::HX_REQUEST.to_string() => extract_string(req.headers().get(RequestHeaders::HX_REQUEST)),
-            RequestHeaders::HX_BOOSTED.to_string() => extract_string(req.headers().get(RequestHeaders::HX_BOOSTED)),
-            RequestHeaders::HX_CURRENT_URL.to_string() => extract_string(req.headers().get(RequestHeaders::HX_CURRENT_URL)),
-            RequestHeaders::HX_HISTORY_RESTORE_REQUEST.to_string() => extract_string(req.headers().get(RequestHeaders::HX_HISTORY_RESTORE_REQUEST)),
-            RequestHeaders::HX_PROMPT.to_string() => extract_string(req.headers().get(RequestHeaders::HX_PROMPT)),
-            RequestHeaders::HX_TARGET.to_string() => extract_string(req.headers().get(RequestHeaders::HX_TARGET)),
-            RequestHeaders::HX_TRIGGER.to_string() => extract_string(req.headers().get(RequestHeaders::HX_TRIGGER)),
-            RequestHeaders::HX_TRIGGER_NAME.to_string() => extract_string(req.headers().get(RequestHeaders::HX_TRIGGER_NAME)),
+            RequestHeaders::HX_REQUEST.to_string() => DataType::Bool(req.headers().get(RequestHeaders::HX_REQUEST).as_bool()),
+            RequestHeaders::HX_BOOSTED.to_string() => DataType::Bool(req.headers().get(RequestHeaders::HX_BOOSTED).as_bool()),
+            RequestHeaders::HX_CURRENT_URL.to_string() => DataType::String(req.headers().get(RequestHeaders::HX_CURRENT_URL).as_option_string()),
+            RequestHeaders::HX_HISTORY_RESTORE_REQUEST.to_string() => DataType::Bool(req.headers().get(RequestHeaders::HX_HISTORY_RESTORE_REQUEST).as_bool()),
+            RequestHeaders::HX_PROMPT.to_string() => DataType::String(req.headers().get(RequestHeaders::HX_PROMPT).as_option_string()),
+            RequestHeaders::HX_TARGET.to_string() => DataType::String(req.headers().get(RequestHeaders::HX_TARGET).as_option_string()),
+            RequestHeaders::HX_TRIGGER.to_string() => DataType::String(req.headers().get(RequestHeaders::HX_TRIGGER).as_option_string()),
+            RequestHeaders::HX_TRIGGER_NAME.to_string() => DataType::String(req.headers().get(RequestHeaders::HX_TRIGGER_NAME).as_option_string()),
         ];
 
         HtmxDetailsInner {
@@ -95,68 +92,87 @@ impl HtmxDetailsInner {
             after_swap_triggers: IndexMap::new(),
         }
     }
+
+    fn get_bool_header(&self, header_name: &str) -> bool {
+        self.request_headers
+            .get(header_name)
+            .map(|data_type| match data_type {
+                DataType::Bool(b) => *b,
+                _ => false,
+            })
+            .unwrap_or(false)
+    }
+
+    fn get_string_header(&self, header_name: &str) -> Option<String> {
+        self.request_headers
+            .get(header_name)
+            .map(|data_type| match data_type {
+                DataType::String(s) => {
+                    if let Some(s) = s {
+                        Some(s.clone())
+                    } else {
+                        None
+                    }
+                },
+                _ => None,
+            })
+            .unwrap_or(None)
+    }
 }
 
 impl HtmxDetails {
+    fn from_inner(inner: Rc<RefCell<HtmxDetailsInner>>) -> HtmxDetails {
+        let is_htmx = inner.borrow().get_bool_header(RequestHeaders::HX_REQUEST);
+        let boosted = inner.borrow().get_bool_header(RequestHeaders::HX_BOOSTED);
+        let history_restore_request = inner.borrow().get_bool_header(RequestHeaders::HX_HISTORY_RESTORE_REQUEST);
+
+        HtmxDetails {
+            inner,
+            is_htmx,
+            boosted,
+            history_restore_request,
+        }
+    }
+
     pub fn new(req: &ServiceRequest) -> HtmxDetails {
         let req = req.request();
         let inner = Rc::new(RefCell::new(HtmxDetailsInner::new(req)));
-        HtmxDetails(inner)
-    }
-
-    pub fn is_htmx(&self) -> bool {
-        HtmxDetails::extract_bool(
-            self.0.borrow().request_headers[&RequestHeaders::HX_REQUEST.to_string()].clone(),
-        )
-    }
-
-    pub fn boosted(&self) -> bool {
-        HtmxDetails::extract_bool(
-            self.0.borrow().request_headers[&RequestHeaders::HX_BOOSTED.to_string()].clone(),
-        )
+        HtmxDetails::from_inner(inner)
     }
 
     pub fn current_url(&self) -> Option<String> {
-        self.0.borrow().request_headers[&RequestHeaders::HX_CURRENT_URL.to_string()].clone()
-    }
-
-    pub fn history_restore_request(&self) -> bool {
-        HtmxDetails::extract_bool(
-            self.0.borrow().request_headers
-                [&RequestHeaders::HX_HISTORY_RESTORE_REQUEST.to_string()]
-                .clone(),
-        )
+        self.inner.borrow().get_string_header(RequestHeaders::HX_CURRENT_URL)
     }
 
     pub fn prompt(&self) -> Option<String> {
-        self.0.borrow().request_headers[&RequestHeaders::HX_PROMPT.to_string()].clone()
+        self.inner.borrow().get_string_header(RequestHeaders::HX_PROMPT)
     }
 
     pub fn target(&self) -> Option<String> {
-        self.0.borrow().request_headers[&RequestHeaders::HX_TARGET.to_string()].clone()
+        self.inner.borrow().get_string_header(RequestHeaders::HX_TARGET)
     }
 
     pub fn trigger(&self) -> Option<String> {
-        self.0.borrow().request_headers[&RequestHeaders::HX_TRIGGER.to_string()].clone()
+        self.inner.borrow().get_string_header(RequestHeaders::HX_TRIGGER)
     }
 
     pub fn trigger_name(&self) -> Option<String> {
-        self.0.borrow().request_headers[&RequestHeaders::HX_TRIGGER_NAME.to_string()].clone()
+        self.inner.borrow().get_string_header(RequestHeaders::HX_TRIGGER_NAME)
     }
 
     pub fn trigger_event(&self, name: String, message: String, trigger_type: TriggerType) {
         match trigger_type {
             TriggerType::Standard => {
-                self.0.borrow_mut().standard_triggers.insert(name, message);
+                self.inner.borrow_mut().standard_triggers.insert(name, message);
             }
             TriggerType::AfterSettle => {
-                self.0
+                self.inner
                     .borrow_mut()
                     .after_settle_triggers
                     .insert(name, message);
             }
             TriggerType::AfterSwap => {
-                self.0
+                self.inner
                     .borrow_mut()
                     .after_swap_triggers
                     .insert(name, message);
@@ -165,56 +181,56 @@ impl HtmxDetails {
     }
 
     pub fn redirect(&self, path: String) {
-        self.0
+        self.inner
             .borrow_mut()
             .response_headers
             .insert(ResponseHeaders::HX_REDIRECT.to_string(), path);
     }
 
     pub fn redirect_with_swap(&self, path: String) {
-        self.0
+        self.inner
             .borrow_mut()
             .response_headers
             .insert(ResponseHeaders::HX_LOCATION.to_string(), path);
     }
 
     pub fn refresh(&self) {
-        self.0
+        self.inner
             .borrow_mut()
             .response_headers
             .insert(ResponseHeaders::HX_REFRESH.to_string(), "true".to_string());
     }
 
     pub fn push_url(&self, path: String) {
-        self.0
+        self.inner
             .borrow_mut()
             .response_headers
             .insert(ResponseHeaders::HX_PUSH_URL.to_string(), path);
     }
 
     pub fn replace_url(&self, path: String) {
-        self.0
+        self.inner
             .borrow_mut()
             .response_headers
             .insert(ResponseHeaders::HX_REPLACE_URL.to_string(), path);
     }
 
     pub fn reswap(&self, swap_type: SwapType) {
-        self.0.borrow_mut().response_headers.insert(
+        self.inner.borrow_mut().response_headers.insert(
             ResponseHeaders::HX_RESWAP.to_string(),
             swap_type.to_string(),
         );
     }
 
     pub fn retarget(&self, selector: String) {
-        self.0.borrow_mut().response_headers.insert(
+        self.inner.borrow_mut().response_headers.insert(
             ResponseHeaders::HX_RETARGET.to_string(),
             selector.to_string(),
         );
     }
 
     pub fn reselect(&self, selector: String) {
-        self.0.borrow_mut().response_headers.insert(
+        self.inner.borrow_mut().response_headers.insert(
             ResponseHeaders::HX_RESELECT.to_string(),
             selector.to_string(),
         );
@@ -222,22 +238,14 @@ impl HtmxDetails {
 
     pub(crate) fn get_triggers(&self, trigger_type: TriggerType) -> IndexMap<String, String> {
         match trigger_type {
-            TriggerType::Standard => self.0.borrow().standard_triggers.clone(),
-            TriggerType::AfterSettle => self.0.borrow().after_settle_triggers.clone(),
-            TriggerType::AfterSwap => self.0.borrow().after_swap_triggers.clone(),
+            TriggerType::Standard => self.inner.borrow().standard_triggers.clone(),
+            TriggerType::AfterSettle => self.inner.borrow().after_settle_triggers.clone(),
+            TriggerType::AfterSwap => self.inner.borrow().after_swap_triggers.clone(),
         }
     }
 
     pub(crate) fn get_response_headers(&self) -> IndexMap<String, String> {
-        self.0.borrow().response_headers.clone()
-    }
-
-    fn extract_bool(value: Option<String>) -> bool {
-        if let Some(value) = value {
-            value == "true"
-        } else {
-            false
-        }
+        self.inner.borrow().response_headers.clone()
     }
 }
 
@@ -253,6 +261,44 @@ impl FromRequest for HtmxDetails {
 
         let inner = Rc::new(RefCell::new(HtmxDetailsInner::new(req)));
 
-        ready(Ok(HtmxDetails(inner)))
+        ready(Ok(HtmxDetails::from_inner(inner)))
+    }
+}
+
+trait AsBool {
+    fn as_bool(&self) -> bool;
+}
+
+trait AsOptionString {
+    fn as_option_string(&self) -> Option<String>;
+}
+
+impl AsBool for Option<&HeaderValue> {
+    fn as_bool(&self) -> bool {
+        match self {
+            Some(header) => {
+                if let Ok(header) = header.to_str() {
+                    header.parse::<bool>().unwrap_or(false)
+                } else {
+                    false
+                }
+            }
+            None => false,
+        }
+    }
+}
+
+impl AsOptionString for Option<&HeaderValue> {
+    fn as_option_string(&self) -> Option<String> {
+        match self {
+            Some(header) => {
+                if let Ok(header) = header.to_str() {
+                    Some(header.to_string())
+                } else {
+                    None
+                }
+            }
+            None => None,
+        }
     }
 }
