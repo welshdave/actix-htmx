@@ -3,28 +3,34 @@ use crate::domain::Todos;
 use crate::routes::{HomeTemplate, TodosTemplate};
 use actix_htmx::HtmxDetails;
 use actix_web::{web, HttpResponse};
-use askama_actix::{TemplateToResponse};
+use askama_actix::TemplateToResponse;
 use sqlx::{Pool, Sqlite};
 
 #[derive(serde::Deserialize)]
-pub struct FormData {
+pub struct NewTodo {
     name: String,
 }
 
 pub async fn create_todo(
     htmx_details: HtmxDetails,
-    form: web::Form<FormData>,
+    form: web::Form<NewTodo>,
     pool: web::Data<Pool<Sqlite>>,
 ) -> HttpResponse {
-    let FormData { name } = form.0;
+    let NewTodo { name } = form.0;
 
     match Todos::add_todo(&pool, &name).await {
         Ok(_) => {
-            let todos = Todos::get_todos(&pool).await.unwrap();
+            let todos = match Todos::get_todos(&pool).await {
+                Ok(x) => x,
+                Err(_) => {
+                    println!("Problem fetching todos!");
+                    Vec::default()
+                }
+            };
 
             htmx_details.replace_url("/".to_string());
 
-            if htmx_details.boosted() {
+            if htmx_details.boosted {
                 let todo_template = TodosTemplate { todos: &todos };
                 todo_template.to_response()
             } else {

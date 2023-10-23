@@ -2,7 +2,7 @@ use crate::domain::Todos;
 
 use crate::routes::HomeTemplate;
 use actix_web::{web, HttpResponse};
-use askama_actix::{TemplateToResponse};
+use askama_actix::TemplateToResponse;
 use sqlx::{Pool, Sqlite};
 
 pub async fn home(pool: web::Data<Pool<Sqlite>>) -> HttpResponse {
