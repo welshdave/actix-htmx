@@ -21,7 +21,7 @@ pub async fn delete_todo(
             htmx_details.trigger_event(
                 "message2".to_string(),
                 Some("Just showing you can trigger more than one event".to_string()),
-                Some(TriggerType::Standard),
+                None,
             );
             htmx_details.trigger_event(
                 "message".to_string(),
