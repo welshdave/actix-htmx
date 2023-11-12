@@ -33,8 +33,8 @@
 //!     }
 //!     htmx_details.trigger_event(
 //!         "my_event".to_string(),
-//!         r#"{"level": "info", "message": "my event message!"}"#.to_string(),
-//!         TriggerType::Standard
+//!         Some(r#"{"level": "info", "message": "my event message!"}"#.to_string()),
+//!         Some(TriggerType::Standard)
 //!     );
 //!
 //!     HttpResponse::Ok().content_type("text/html").body(// render the view)

@@ -64,9 +64,9 @@ impl fmt::Display for SwapType {
 }
 
 struct HtmxDetailsInner {
-    standard_triggers: IndexMap<String, String>,
-    after_settle_triggers: IndexMap<String, String>,
-    after_swap_triggers: IndexMap<String, String>,
+    standard_triggers: IndexMap<String, Option<String>>,
+    after_settle_triggers: IndexMap<String, Option<String>>,
+    after_swap_triggers: IndexMap<String, Option<String>>,
     response_headers: IndexMap<String, String>,
     request_headers: IndexMap<String, DataType>,
 }
@@ -160,7 +160,8 @@ impl HtmxDetails {
         self.inner.borrow().get_string_header(RequestHeaders::HX_TRIGGER_NAME)
     }
 
-    pub fn trigger_event(&self, name: String, message: String, trigger_type: TriggerType) {
+    pub fn trigger_event(&self, name: String, message: Option<String>, trigger_type: Option<TriggerType>) {
+        let trigger_type = trigger_type.unwrap_or(TriggerType::Standard);
         match trigger_type {
             TriggerType::Standard => {
                 self.inner.borrow_mut().standard_triggers.insert(name, message);
@@ -236,7 +237,7 @@ impl HtmxDetails {
         );
     }
 
-    pub(crate) fn get_triggers(&self, trigger_type: TriggerType) -> IndexMap<String, String> {
+    pub(crate) fn get_triggers(&self, trigger_type: TriggerType) -> IndexMap<String, Option<String>> {
         match trigger_type {
             TriggerType::Standard => self.inner.borrow().standard_triggers.clone(),
             TriggerType::AfterSettle => self.inner.borrow().after_settle_triggers.clone(),

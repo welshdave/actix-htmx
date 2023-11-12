@@ -59,14 +59,19 @@ where
 
             let (req, mut res) = res.into_parts();
 
-            let trigger_json = |trigger_map: IndexMap<String, String>| -> String {
+            let trigger_json = |trigger_map: IndexMap<String, Option<String>>| -> String {
                 let mut triggers = String::new();
                 triggers.push('{');
                 trigger_map.iter().for_each(|(key, value)| {
-                    if value.trim().starts_with('{') {
-                        triggers.push_str(&format!("\"{}\": {},", key, value));
-                    } else {
-                        triggers.push_str(&format!("\"{}\": \"{}\",", key, value));
+                    if let Some(value) = value {
+                        if value.trim().starts_with('{') {
+                            triggers.push_str(&format!("\"{}\": {},", key, value));
+                        } else {
+                            triggers.push_str(&format!("\"{}\": \"{}\",", key, value));
+                        }
+                    }
+                    else {
+                        triggers.push_str(&format!("\"{}\": null,", key));
                     }
                 });
                 triggers.pop();
@@ -75,7 +80,7 @@ where
             };
 
             let mut process_trigger_header =
-                |header_name: HeaderName, trigger_map: IndexMap<String, String>| {
+                |header_name: HeaderName, trigger_map: IndexMap<String, Option<String>>| {
                     if trigger_map.is_empty() {
                         return;
                     }
