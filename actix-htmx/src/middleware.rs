@@ -1,4 +1,4 @@
-use crate::{headers::ResponseHeaders, HtmxDetails, TriggerType};
+use crate::{headers::ResponseHeaders, Htmx, TriggerType};
 
 use actix_web::http::header::{HeaderName, HeaderValue};
 use actix_web::{
@@ -48,9 +48,9 @@ where
     forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        let htmx_details = HtmxDetails::new(&req);
+        let htmx = Htmx::new(&req);
 
-        req.extensions_mut().insert(htmx_details);
+        req.extensions_mut().insert(htmx);
 
         let fut = self.service.call(req);
 
@@ -79,12 +79,25 @@ where
                 triggers
             };
 
+            let simple_header = |trigger_map: IndexMap<String, Option<String>>| -> String {
+                let mut triggers = trigger_map.iter().map(|(key, _)| key.to_string() + ",").collect::<String>();
+                triggers.pop();
+                triggers
+            };
+
             let mut process_trigger_header =
-                |header_name: HeaderName, trigger_map: IndexMap<String, Option<String>>| {
+                |header_name: HeaderName, trigger_map: IndexMap<String, Option<String>>, simple: bool| {
                     if trigger_map.is_empty() {
                         return;
                     }
-                    let triggers = trigger_json(trigger_map);
+
+                    let triggers = if simple {
+                        simple_header(trigger_map)
+                    }
+                    else {
+                        trigger_json(trigger_map)
+                    };
+
                     if let Ok(value) = HeaderValue::from_str(&triggers) {
                         res.headers_mut().insert(header_name, value);
                     } else {
@@ -92,18 +105,21 @@ where
                     }
                 };
 
-            if let Some(htmx_response_details) = req.extensions().get::<HtmxDetails>() {
+            if let Some(htmx_response_details) = req.extensions().get::<Htmx>() {
                 process_trigger_header(
                     HeaderName::from_static(ResponseHeaders::HX_TRIGGER),
                     htmx_response_details.get_triggers(TriggerType::Standard),
+                    htmx_response_details.is_simple_trigger(TriggerType::Standard)
                 );
                 process_trigger_header(
                     HeaderName::from_static(ResponseHeaders::HX_TRIGGER_AFTER_SETTLE),
                     htmx_response_details.get_triggers(TriggerType::AfterSettle),
+                    htmx_response_details.is_simple_trigger(TriggerType::AfterSettle)
                 );
                 process_trigger_header(
                     HeaderName::from_static(ResponseHeaders::HX_TRIGGER_AFTER_SWAP),
                     htmx_response_details.get_triggers(TriggerType::AfterSwap),
+                    htmx_response_details.is_simple_trigger(TriggerType::AfterSwap)
                 );
 
                 let response_headers = htmx_response_details.get_response_headers();

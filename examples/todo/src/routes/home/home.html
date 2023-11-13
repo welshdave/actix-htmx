@@ -37,9 +37,17 @@
 
     document.body.addEventListener("message2", function(evt){
         console.log(evt.detail.value);
-    })
+    });
 
     document.body.addEventListener("deleted", function(){
         console.log("deleted event was triggered");
-    })
+    });
+
+    document.body.addEventListener("event1", function(){
+        console.log("event1 was triggered");
+    });
+
+    document.body.addEventListener("event2", function(){
+        console.log("event2 was triggered");
+    });
 </script>

@@ -1,6 +1,6 @@
 use crate::domain::{Status, Todos};
 use crate::routes::TodosTemplate;
-use actix_htmx::{HtmxDetails, TriggerType};
+use actix_htmx::{Htmx, TriggerType};
 use actix_web::{web, HttpResponse};
 use askama_actix::TemplateToResponse;
 use sqlx::{Pool, Sqlite};
@@ -12,7 +12,7 @@ pub struct ToDoStatus {
 }
 
 pub async fn update_todo(
-    htmx_details: HtmxDetails,
+    htmx: Htmx,
     id: web::Path<Uuid>,
     form: web::Form<ToDoStatus>,
     pool: web::Data<Pool<Sqlite>>,
@@ -27,7 +27,7 @@ pub async fn update_todo(
 
     match Todos::update_todo(&pool, status, *id).await {
         Ok(_) => {
-            htmx_details.trigger_event(
+            htmx.trigger_event(
                 "message".to_string(),
                 Some(format!("Task with id {} was set to {}", id, status).to_string()),
                 Some(TriggerType::Standard),

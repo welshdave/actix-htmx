@@ -1,7 +1,7 @@
 use crate::domain::Todos;
 
 use crate::routes::{HomeTemplate, TodosTemplate};
-use actix_htmx::HtmxDetails;
+use actix_htmx::Htmx;
 use actix_web::{web, HttpResponse};
 use askama_actix::TemplateToResponse;
 use sqlx::{Pool, Sqlite};
@@ -12,7 +12,7 @@ pub struct NewTodo {
 }
 
 pub async fn create_todo(
-    htmx_details: HtmxDetails,
+    htmx: Htmx,
     form: web::Form<NewTodo>,
     pool: web::Data<Pool<Sqlite>>,
 ) -> HttpResponse {
@@ -28,9 +28,9 @@ pub async fn create_todo(
                 }
             };
 
-            htmx_details.replace_url("/".to_string());
+            htmx.replace_url("/".to_string());
 
-            if htmx_details.boosted {
+            if htmx.boosted {
                 let todo_template = TodosTemplate { todos: &todos };
                 todo_template.to_response()
             } else {
