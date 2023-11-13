@@ -92,21 +92,21 @@ where
                     }
                 };
 
-            if let Some(htmx_response_details) = req.extensions().get::<Htmx>() {
+            if let Some(htmx_response) = req.extensions().get::<Htmx>() {
                 process_trigger_header(
                     HeaderName::from_static(ResponseHeaders::HX_TRIGGER),
-                    htmx_response_details.get_triggers(TriggerType::Standard),
+                    htmx_response.get_triggers(TriggerType::Standard),
                 );
                 process_trigger_header(
                     HeaderName::from_static(ResponseHeaders::HX_TRIGGER_AFTER_SETTLE),
-                    htmx_response_details.get_triggers(TriggerType::AfterSettle),
+                    htmx_response.get_triggers(TriggerType::AfterSettle),
                 );
                 process_trigger_header(
                     HeaderName::from_static(ResponseHeaders::HX_TRIGGER_AFTER_SWAP),
-                    htmx_response_details.get_triggers(TriggerType::AfterSwap),
+                    htmx_response.get_triggers(TriggerType::AfterSwap),
                 );
 
-                let response_headers = htmx_response_details.get_response_headers();
+                let response_headers = htmx_response.get_response_headers();
                 response_headers
                     .iter()
                     .for_each(|(key, value)| match key.parse() {
