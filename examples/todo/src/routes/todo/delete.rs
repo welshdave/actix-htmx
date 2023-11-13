@@ -29,6 +29,8 @@ pub async fn delete_todo(
                 Some(TriggerType::AfterSettle),
             );
             htmx.trigger_event("deleted".to_string(), None, None);
+            htmx.trigger_event("event1".to_string(), None, Some(TriggerType::AfterSwap));
+            htmx.trigger_event("event2".to_string(), None, Some(TriggerType::AfterSwap));
             let todos = match Todos::get_todos(&pool).await {
                 Ok(x) => x,
                 Err(_) => {

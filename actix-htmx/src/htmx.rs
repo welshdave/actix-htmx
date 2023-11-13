@@ -5,6 +5,7 @@ use actix_web::{FromRequest, HttpMessage, HttpRequest};
 use futures_util::future::{ready, Ready};
 use indexmap::IndexMap;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
 
@@ -25,7 +26,7 @@ pub struct Htmx {
     pub history_restore_request: bool,
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum TriggerType {
     Standard,
     AfterSettle,
@@ -69,6 +70,7 @@ struct HtmxInner {
     after_swap_triggers: IndexMap<String, Option<String>>,
     response_headers: IndexMap<String, String>,
     request_headers: IndexMap<String, DataType>,
+    simple_trigger: HashMap<TriggerType, bool>,
 }
 
 impl HtmxInner {
@@ -90,6 +92,7 @@ impl HtmxInner {
             standard_triggers: IndexMap::new(),
             after_settle_triggers: IndexMap::new(),
             after_swap_triggers: IndexMap::new(),
+            simple_trigger: HashMap::new(),
         }
     }
 
@@ -164,15 +167,24 @@ impl Htmx {
         let trigger_type = trigger_type.unwrap_or(TriggerType::Standard);
         match trigger_type {
             TriggerType::Standard => {
+                if message != None {
+                    _ = self.inner.borrow_mut().simple_trigger.entry(TriggerType::Standard).or_insert(false);
+                }
                 self.inner.borrow_mut().standard_triggers.insert(name, message);
             }
             TriggerType::AfterSettle => {
+                if message != None {
+                    _ = self.inner.borrow_mut().simple_trigger.entry(TriggerType::AfterSettle).or_insert(false);
+                }
                 self.inner
                     .borrow_mut()
                     .after_settle_triggers
                     .insert(name, message);
             }
             TriggerType::AfterSwap => {
+                if message != None {
+                    _ = self.inner.borrow_mut().simple_trigger.entry(TriggerType::AfterSwap).or_insert(false);
+                }
                 self.inner
                     .borrow_mut()
                     .after_swap_triggers
@@ -242,6 +254,14 @@ impl Htmx {
             TriggerType::Standard => self.inner.borrow().standard_triggers.clone(),
             TriggerType::AfterSettle => self.inner.borrow().after_settle_triggers.clone(),
             TriggerType::AfterSwap => self.inner.borrow().after_swap_triggers.clone(),
+        }
+    }
+
+    pub(crate) fn is_simple_trigger(&self, trigger_type: TriggerType) -> bool {
+        match trigger_type {
+            TriggerType::Standard => *self.inner.borrow().simple_trigger.get(&TriggerType::Standard).unwrap_or(&true),
+            TriggerType::AfterSettle => *self.inner.borrow().simple_trigger.get(&TriggerType::AfterSettle).unwrap_or(&true),
+            TriggerType::AfterSwap => *self.inner.borrow().simple_trigger.get(&TriggerType::AfterSwap).unwrap_or(&true),
         }
     }
 
