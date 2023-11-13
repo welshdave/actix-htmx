@@ -18,8 +18,8 @@ macro_rules! collection {
 }
 
 #[derive(Clone)]
-pub struct HtmxDetails {
-    inner: Rc<RefCell<HtmxDetailsInner>>,
+pub struct Htmx {
+    inner: Rc<RefCell<HtmxInner>>,
     pub is_htmx: bool,
     pub boosted: bool,
     pub history_restore_request: bool,
@@ -63,7 +63,7 @@ impl fmt::Display for SwapType {
     }
 }
 
-struct HtmxDetailsInner {
+struct HtmxInner {
     standard_triggers: IndexMap<String, Option<String>>,
     after_settle_triggers: IndexMap<String, Option<String>>,
     after_swap_triggers: IndexMap<String, Option<String>>,
@@ -71,8 +71,8 @@ struct HtmxDetailsInner {
     request_headers: IndexMap<String, DataType>,
 }
 
-impl HtmxDetailsInner {
-    pub fn new(req: &HttpRequest) -> HtmxDetailsInner {
+impl HtmxInner {
+    pub fn new(req: &HttpRequest) -> HtmxInner {
         let request_headers = collection![
             RequestHeaders::HX_REQUEST.to_string() => DataType::Bool(req.headers().get(RequestHeaders::HX_REQUEST).as_bool()),
             RequestHeaders::HX_BOOSTED.to_string() => DataType::Bool(req.headers().get(RequestHeaders::HX_BOOSTED).as_bool()),
@@ -84,7 +84,7 @@ impl HtmxDetailsInner {
             RequestHeaders::HX_TRIGGER_NAME.to_string() => DataType::String(req.headers().get(RequestHeaders::HX_TRIGGER_NAME).as_option_string()),
         ];
 
-        HtmxDetailsInner {
+        HtmxInner {
             request_headers,
             response_headers: IndexMap::new(),
             standard_triggers: IndexMap::new(),
@@ -120,13 +120,13 @@ impl HtmxDetailsInner {
     }
 }
 
-impl HtmxDetails {
-    fn from_inner(inner: Rc<RefCell<HtmxDetailsInner>>) -> HtmxDetails {
+impl Htmx {
+    fn from_inner(inner: Rc<RefCell<HtmxInner>>) -> Htmx {
         let is_htmx = inner.borrow().get_bool_header(RequestHeaders::HX_REQUEST);
         let boosted = inner.borrow().get_bool_header(RequestHeaders::HX_BOOSTED);
         let history_restore_request = inner.borrow().get_bool_header(RequestHeaders::HX_HISTORY_RESTORE_REQUEST);
 
-        HtmxDetails {
+        Htmx {
             inner,
             is_htmx,
             boosted,
@@ -134,10 +134,10 @@ impl HtmxDetails {
         }
     }
 
-    pub fn new(req: &ServiceRequest) -> HtmxDetails {
+    pub fn new(req: &ServiceRequest) -> Htmx {
         let req = req.request();
-        let inner = Rc::new(RefCell::new(HtmxDetailsInner::new(req)));
-        HtmxDetails::from_inner(inner)
+        let inner = Rc::new(RefCell::new(HtmxInner::new(req)));
+        Htmx::from_inner(inner)
     }
 
     pub fn current_url(&self) -> Option<String> {
@@ -250,19 +250,19 @@ impl HtmxDetails {
     }
 }
 
-impl FromRequest for HtmxDetails {
+impl FromRequest for Htmx {
     type Error = Error;
-    type Future = Ready<Result<HtmxDetails, Error>>;
+    type Future = Ready<Result<Htmx, Error>>;
 
     #[inline]
     fn from_request(req: &actix_web::HttpRequest, _: &mut Payload) -> Self::Future {
-        if let Some(htmx_details) = req.extensions_mut().get::<HtmxDetails>() {
-            return ready(Ok(htmx_details.clone()));
+        if let Some(htmx) = req.extensions_mut().get::<Htmx>() {
+            return ready(Ok(htmx.clone()));
         }
 
-        let inner = Rc::new(RefCell::new(HtmxDetailsInner::new(req)));
+        let inner = Rc::new(RefCell::new(HtmxInner::new(req)));
 
-        ready(Ok(HtmxDetails::from_inner(inner)))
+        ready(Ok(Htmx::from_inner(inner)))
     }
 }
 

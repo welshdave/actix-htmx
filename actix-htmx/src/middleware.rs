@@ -1,4 +1,4 @@
-use crate::{headers::ResponseHeaders, HtmxDetails, TriggerType};
+use crate::{headers::ResponseHeaders, Htmx, TriggerType};
 
 use actix_web::http::header::{HeaderName, HeaderValue};
 use actix_web::{
@@ -48,9 +48,9 @@ where
     forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        let htmx_details = HtmxDetails::new(&req);
+        let htmx = Htmx::new(&req);
 
-        req.extensions_mut().insert(htmx_details);
+        req.extensions_mut().insert(htmx);
 
         let fut = self.service.call(req);
 
@@ -92,21 +92,21 @@ where
                     }
                 };
 
-            if let Some(htmx_response_details) = req.extensions().get::<HtmxDetails>() {
+            if let Some(htmx_response) = req.extensions().get::<Htmx>() {
                 process_trigger_header(
                     HeaderName::from_static(ResponseHeaders::HX_TRIGGER),
-                    htmx_response_details.get_triggers(TriggerType::Standard),
+                    htmx_response.get_triggers(TriggerType::Standard),
                 );
                 process_trigger_header(
                     HeaderName::from_static(ResponseHeaders::HX_TRIGGER_AFTER_SETTLE),
-                    htmx_response_details.get_triggers(TriggerType::AfterSettle),
+                    htmx_response.get_triggers(TriggerType::AfterSettle),
                 );
                 process_trigger_header(
                     HeaderName::from_static(ResponseHeaders::HX_TRIGGER_AFTER_SWAP),
-                    htmx_response_details.get_triggers(TriggerType::AfterSwap),
+                    htmx_response.get_triggers(TriggerType::AfterSwap),
                 );
 
-                let response_headers = htmx_response_details.get_response_headers();
+                let response_headers = htmx_response.get_response_headers();
                 response_headers
                     .iter()
                     .for_each(|(key, value)| match key.parse() {
