@@ -1,4 +1,4 @@
-use crate::{headers::ResponseHeaders, HtmxDetails, TriggerType};
+use crate::{headers::ResponseHeaders, Htmx, TriggerType};
 
 use actix_web::http::header::{HeaderName, HeaderValue};
 use actix_web::{
@@ -48,9 +48,9 @@ where
     forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        let htmx_details = HtmxDetails::new(&req);
+        let htmx = Htmx::new(&req);
 
-        req.extensions_mut().insert(htmx_details);
+        req.extensions_mut().insert(htmx);
 
         let fut = self.service.call(req);
 
@@ -92,7 +92,7 @@ where
                     }
                 };
 
-            if let Some(htmx_response_details) = req.extensions().get::<HtmxDetails>() {
+            if let Some(htmx_response_details) = req.extensions().get::<Htmx>() {
                 process_trigger_header(
                     HeaderName::from_static(ResponseHeaders::HX_TRIGGER),
                     htmx_response_details.get_triggers(TriggerType::Standard),
