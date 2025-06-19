@@ -69,8 +69,7 @@ where
                         } else {
                             triggers.push_str(&format!("\"{}\": \"{}\",", key, value));
                         }
-                    }
-                    else {
+                    } else {
                         triggers.push_str(&format!("\"{}\": null,", key));
                     }
                 });
@@ -80,21 +79,25 @@ where
             };
 
             let simple_header = |trigger_map: IndexMap<String, Option<String>>| -> String {
-                let mut triggers = trigger_map.iter().map(|(key, _)| key.to_string() + ",").collect::<String>();
+                let mut triggers = trigger_map
+                    .iter()
+                    .map(|(key, _)| key.to_string() + ",")
+                    .collect::<String>();
                 triggers.pop();
                 triggers
             };
 
             let mut process_trigger_header =
-                |header_name: HeaderName, trigger_map: IndexMap<String, Option<String>>, simple: bool| {
+                |header_name: HeaderName,
+                 trigger_map: IndexMap<String, Option<String>>,
+                 simple: bool| {
                     if trigger_map.is_empty() {
                         return;
                     }
 
                     let triggers = if simple {
                         simple_header(trigger_map)
-                    }
-                    else {
+                    } else {
                         trigger_json(trigger_map)
                     };
 
@@ -109,17 +112,17 @@ where
                 process_trigger_header(
                     HeaderName::from_static(ResponseHeaders::HX_TRIGGER),
                     htmx_response.get_triggers(TriggerType::Standard),
-                    htmx_response.is_simple_trigger(TriggerType::Standard)
+                    htmx_response.is_simple_trigger(TriggerType::Standard),
                 );
                 process_trigger_header(
                     HeaderName::from_static(ResponseHeaders::HX_TRIGGER_AFTER_SETTLE),
                     htmx_response.get_triggers(TriggerType::AfterSettle),
-                    htmx_response.is_simple_trigger(TriggerType::AfterSettle)
+                    htmx_response.is_simple_trigger(TriggerType::AfterSettle),
                 );
                 process_trigger_header(
                     HeaderName::from_static(ResponseHeaders::HX_TRIGGER_AFTER_SWAP),
                     htmx_response.get_triggers(TriggerType::AfterSwap),
-                    htmx_response.is_simple_trigger(TriggerType::AfterSwap)
+                    htmx_response.is_simple_trigger(TriggerType::AfterSwap),
                 );
 
                 let response_headers = htmx_response.get_response_headers();
