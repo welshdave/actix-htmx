@@ -47,6 +47,6 @@ mod htmx;
 mod middleware;
 
 pub use self::{
-    htmx::{Htmx, TriggerType},
+    htmx::{Htmx, SwapType, TriggerType},
     middleware::HtmxMiddleware,
 };
