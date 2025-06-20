@@ -511,6 +511,8 @@ mod tests {
                     assert_eq!(htmx.current_url(), None);
                     assert_eq!(htmx.prompt(), None);
                     assert_eq!(htmx.target(), None);
+                    // Should not panic and should return false
+                    assert_eq!(htmx.is_htmx, false);
                     HttpResponse::Ok().finish()
                 })),
         )
@@ -521,6 +523,7 @@ mod tests {
             .insert_header((HeaderName::from_static("hx-current-url"), HeaderValue::from_bytes(b"\xFF\xFF").unwrap()))
             .insert_header((HeaderName::from_static("hx-prompt"), HeaderValue::from_bytes(b"\xFF\xFF").unwrap()))
             .insert_header((HeaderName::from_static("hx-target"), HeaderValue::from_bytes(b"\xFF\xFF").unwrap()))
+            .insert_header((HeaderName::from_static("hx-request"), HeaderValue::from_bytes(b"\xFF\xFF").unwrap()))
             .to_request();
 
         let resp = test::call_service(&app, req).await;
