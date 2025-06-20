@@ -17,5 +17,3 @@ log = "0.4"
 
 [dev-dependencies]
 actix-web = { version = "4", features = ["macros"] }
-
-
