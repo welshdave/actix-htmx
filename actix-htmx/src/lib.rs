@@ -119,13 +119,12 @@ mod tests {
 
         let settle_header = resp
             .headers()
-            .get(HeaderName::from_static(ResponseHeaders::HX_TRIGGER_AFTER_SETTLE))
+            .get(HeaderName::from_static(
+                ResponseHeaders::HX_TRIGGER_AFTER_SETTLE,
+            ))
             .unwrap();
-        
-        assert!(settle_header
-            .to_str()
-            .unwrap()
-            .contains("settle-event"));
+
+        assert!(settle_header.to_str().unwrap().contains("settle-event"));
     }
 
     #[actix_web::test]

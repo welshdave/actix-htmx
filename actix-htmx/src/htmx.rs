@@ -110,13 +110,7 @@ impl HtmxInner {
         self.request_headers
             .get(header_name)
             .map(|data_type| match data_type {
-                DataType::String(s) => {
-                    if let Some(s) = s {
-                        Some(s.clone())
-                    } else {
-                        None
-                    }
-                }
+                DataType::String(s) => s.clone(),
                 _ => None,
             })
             .unwrap_or(None)
@@ -184,7 +178,7 @@ impl Htmx {
         let trigger_type = trigger_type.unwrap_or(TriggerType::Standard);
         match trigger_type {
             TriggerType::Standard => {
-                if message != None {
+                if message.is_some() {
                     _ = self
                         .inner
                         .borrow_mut()
@@ -198,7 +192,7 @@ impl Htmx {
                     .insert(name, message);
             }
             TriggerType::AfterSettle => {
-                if message != None {
+                if message.is_some() {
                     _ = self
                         .inner
                         .borrow_mut()
@@ -212,7 +206,7 @@ impl Htmx {
                     .insert(name, message);
             }
             TriggerType::AfterSwap => {
-                if message != None {
+                if message.is_some() {
                     _ = self
                         .inner
                         .borrow_mut()
