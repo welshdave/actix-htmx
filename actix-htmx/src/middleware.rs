@@ -45,7 +45,7 @@ use std::future::{ready, Ready};
 ///             <html>
 ///                 <head>
 ///                     <title>htmx example</title>
-///                     <script src="https://unpkg.com/htmx.org@2.0.5"></script>
+///                     <script src="https://unpkg.com/htmx.org@2.0.6"></script>
 ///                 </head>
 ///                 <body>
 ///                     <div id="content">
