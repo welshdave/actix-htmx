@@ -10,6 +10,65 @@ use indexmap::IndexMap;
 use log::warn;
 use std::future::{ready, Ready};
 
+/// A middleware for Actix Web that handles htmx specific headers and triggers.
+///
+/// This module provides middleware functionality for using htmx in your Actix Web
+/// application. It processes htmx headers and manages various types of triggers that
+/// can be used for client-side interactions.
+///
+/// [`HtmxMiddleware`] injects an Htmx struct into any route that it wraps. This
+/// Htmx struct provides helper properties and methods that allow for your application
+/// to easily interact with htmx.
+///
+/// # Example
+///
+/// ```no_run
+/// use actix_web::{web, App, HttpServer, Responder, HttpResponse};
+/// use actix_htmx::{Htmx, HtmxMiddleware};
+///
+/// #[actix_web::main]
+/// async fn main() -> std::io::Result<()> {
+///     HttpServer::new(|| {
+///         App::new()
+///            .wrap(HtmxMiddleware)
+///             .route("/", web::get().to(index))
+///     })
+///     .bind("127.0.0.1:8080")?
+///     .run()
+///     .await
+/// }
+///
+/// async fn index(htmx: Htmx) -> impl Responder {
+///     if !htmx.is_htmx {
+///         HttpResponse::Ok().body(r##"
+///             <!DOCTYPE html>
+///             <html>
+///                 <head>
+///                     <title>htmx example</title>
+///                     <script src="https://unpkg.com/htmx.org@2.0.5"></script>
+///                 </head>
+///                 <body>
+///                     <div id="content">
+///                         This was not an htmx request! <a href="/" hx-get="/" hx-target="#content">Make it htmx!</a>
+///                     </div>
+///                 </body>
+///             </html>
+///         "##)
+///     } else {
+///         HttpResponse::Ok().body(r##"
+///         <div id="content">
+///             This was an htmx request! <a href="/">Let's go back to plain old HTML</a>
+///         <div>
+///         "##)
+///     }
+/// }
+/// ```
+///
+/// The middleware automatically processes the following htmx headers:
+/// - `HX-Trigger`: For standard htmx triggers
+/// - `HX-Trigger-After-Settle`: For triggers that fire after the settling phase
+/// - `HX-Trigger-After-Swap`: For triggers that fire after content swap
+///
 pub struct HtmxMiddleware;
 
 impl<S, B> Transform<S, ServiceRequest> for HtmxMiddleware
