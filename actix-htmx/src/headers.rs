@@ -1,4 +1,13 @@
+/// Constants for htmx request headers.
+///
+/// These headers are sent by htmx with requests and can be used
+/// to determine the context and nature of the request.
 pub(crate) struct RequestHeaders;
+
+/// Constants for htmx response headers.
+///
+/// These headers can be set in responses to control htmx behavior
+/// on the client side.
 pub(crate) struct ResponseHeaders;
 
 impl RequestHeaders {
