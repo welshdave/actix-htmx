@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/welshdave/actix-htmx/compare/actix-htmx-v0.3.0...actix-htmx-v0.3.1) - 2025-06-29
+
+### Other
+
+- Update version of htmx used in examples
+- Updated readme
+- more docs/comments
+- htmx docs
+- add middleware docs
+- add to malformed header test
+- more tests
+- tidying up
+- Added basic tests
+- formatting
+- Properly expose SwapType
+
 ## [0.3.0](https://github.com/welshdave/actix-htmx/compare/actix-htmx-v0.2.0...actix-htmx-v0.3.0) - 2023-11-13
 
 ### Other

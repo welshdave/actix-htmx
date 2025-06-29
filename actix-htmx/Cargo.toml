@@ -1,6 +1,6 @@
 [package]
 name = "actix-htmx"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Dave Lewis <dave@dllewis.org"]
 description = "Actix Web middleware for use when developing with htmx"
 readme = "../README.md"
