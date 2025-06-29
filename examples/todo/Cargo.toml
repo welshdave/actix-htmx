@@ -18,8 +18,8 @@ actix-web = { version = "4", default-features = false, features = [ "macros" ] }
 askama = {  version = "0.12", default-features = false, features = [ "with-actix-web" ] }
 askama_actix = "0.14"
 anyhow = "1"
-sqlx = { version = "0.7", default-features = false, features = [ "runtime-tokio-rustls", "macros", "sqlite", "uuid", "chrono", "migrate"] }
-uuid = { version = "1.4", features = [ "v4", "fast-rng", "macro-diagnostics", "serde" ] }
+sqlx = { version = "0.8", default-features = false, features = [ "runtime-tokio-rustls", "macros", "sqlite", "uuid", "chrono", "migrate"] }
+uuid = { version = "1.17", features = [ "v4", "fast-rng", "macro-diagnostics", "serde" ] }
 serde = { version = "1.0", features = [ "derive" ] }
 
 
