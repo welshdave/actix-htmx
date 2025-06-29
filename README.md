@@ -24,7 +24,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-actix-htmx = "0.4"
+actix-htmx = "0.3"
 actix-web = "4"
 ```
 
