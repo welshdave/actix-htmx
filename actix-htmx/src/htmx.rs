@@ -110,13 +110,7 @@ impl HtmxInner {
         self.request_headers
             .get(header_name)
             .map(|data_type| match data_type {
-                DataType::String(s) => {
-                    if let Some(s) = s {
-                        Some(s.clone())
-                    } else {
-                        None
-                    }
-                },
+                DataType::String(s) => s.clone(),
                 _ => None,
             })
             .unwrap_or(None)
@@ -127,7 +121,9 @@ impl Htmx {
     fn from_inner(inner: Rc<RefCell<HtmxInner>>) -> Htmx {
         let is_htmx = inner.borrow().get_bool_header(RequestHeaders::HX_REQUEST);
         let boosted = inner.borrow().get_bool_header(RequestHeaders::HX_BOOSTED);
-        let history_restore_request = inner.borrow().get_bool_header(RequestHeaders::HX_HISTORY_RESTORE_REQUEST);
+        let history_restore_request = inner
+            .borrow()
+            .get_bool_header(RequestHeaders::HX_HISTORY_RESTORE_REQUEST);
 
         Htmx {
             inner,
@@ -144,37 +140,65 @@ impl Htmx {
     }
 
     pub fn current_url(&self) -> Option<String> {
-        self.inner.borrow().get_string_header(RequestHeaders::HX_CURRENT_URL)
+        self.inner
+            .borrow()
+            .get_string_header(RequestHeaders::HX_CURRENT_URL)
     }
 
     pub fn prompt(&self) -> Option<String> {
-        self.inner.borrow().get_string_header(RequestHeaders::HX_PROMPT)
+        self.inner
+            .borrow()
+            .get_string_header(RequestHeaders::HX_PROMPT)
     }
 
     pub fn target(&self) -> Option<String> {
-        self.inner.borrow().get_string_header(RequestHeaders::HX_TARGET)
+        self.inner
+            .borrow()
+            .get_string_header(RequestHeaders::HX_TARGET)
     }
 
     pub fn trigger(&self) -> Option<String> {
-        self.inner.borrow().get_string_header(RequestHeaders::HX_TRIGGER)
+        self.inner
+            .borrow()
+            .get_string_header(RequestHeaders::HX_TRIGGER)
     }
 
     pub fn trigger_name(&self) -> Option<String> {
-        self.inner.borrow().get_string_header(RequestHeaders::HX_TRIGGER_NAME)
+        self.inner
+            .borrow()
+            .get_string_header(RequestHeaders::HX_TRIGGER_NAME)
     }
 
-    pub fn trigger_event(&self, name: String, message: Option<String>, trigger_type: Option<TriggerType>) {
+    pub fn trigger_event(
+        &self,
+        name: String,
+        message: Option<String>,
+        trigger_type: Option<TriggerType>,
+    ) {
         let trigger_type = trigger_type.unwrap_or(TriggerType::Standard);
         match trigger_type {
             TriggerType::Standard => {
-                if message != None {
-                    _ = self.inner.borrow_mut().simple_trigger.entry(TriggerType::Standard).or_insert(false);
+                if message.is_some() {
+                    _ = self
+                        .inner
+                        .borrow_mut()
+                        .simple_trigger
+                        .entry(TriggerType::Standard)
+                        .or_insert(false);
                 }
-                self.inner.borrow_mut().standard_triggers.insert(name, message);
+                self.inner
+                    .borrow_mut()
+                    .standard_triggers
+                    .insert(name, message);
             }
             TriggerType::AfterSettle => {
-                if message != None {
-                    _ = self.inner.borrow_mut().simple_trigger.entry(TriggerType::AfterSettle).or_insert(false);
+                if message.is_some() {
+                    _ = self
+                        .inner
+                        .borrow_mut()
+                        .simple_trigger
+                        .entry(TriggerType::AfterSettle)
+                        .or_insert(false);
                 }
                 self.inner
                     .borrow_mut()
@@ -182,8 +206,13 @@ impl Htmx {
                     .insert(name, message);
             }
             TriggerType::AfterSwap => {
-                if message != None {
-                    _ = self.inner.borrow_mut().simple_trigger.entry(TriggerType::AfterSwap).or_insert(false);
+                if message.is_some() {
+                    _ = self
+                        .inner
+                        .borrow_mut()
+                        .simple_trigger
+                        .entry(TriggerType::AfterSwap)
+                        .or_insert(false);
                 }
                 self.inner
                     .borrow_mut()
@@ -249,7 +278,10 @@ impl Htmx {
         );
     }
 
-    pub(crate) fn get_triggers(&self, trigger_type: TriggerType) -> IndexMap<String, Option<String>> {
+    pub(crate) fn get_triggers(
+        &self,
+        trigger_type: TriggerType,
+    ) -> IndexMap<String, Option<String>> {
         match trigger_type {
             TriggerType::Standard => self.inner.borrow().standard_triggers.clone(),
             TriggerType::AfterSettle => self.inner.borrow().after_settle_triggers.clone(),
@@ -259,9 +291,24 @@ impl Htmx {
 
     pub(crate) fn is_simple_trigger(&self, trigger_type: TriggerType) -> bool {
         match trigger_type {
-            TriggerType::Standard => *self.inner.borrow().simple_trigger.get(&TriggerType::Standard).unwrap_or(&true),
-            TriggerType::AfterSettle => *self.inner.borrow().simple_trigger.get(&TriggerType::AfterSettle).unwrap_or(&true),
-            TriggerType::AfterSwap => *self.inner.borrow().simple_trigger.get(&TriggerType::AfterSwap).unwrap_or(&true),
+            TriggerType::Standard => *self
+                .inner
+                .borrow()
+                .simple_trigger
+                .get(&TriggerType::Standard)
+                .unwrap_or(&true),
+            TriggerType::AfterSettle => *self
+                .inner
+                .borrow()
+                .simple_trigger
+                .get(&TriggerType::AfterSettle)
+                .unwrap_or(&true),
+            TriggerType::AfterSwap => *self
+                .inner
+                .borrow()
+                .simple_trigger
+                .get(&TriggerType::AfterSwap)
+                .unwrap_or(&true),
         }
     }
 
