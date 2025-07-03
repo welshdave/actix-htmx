@@ -15,17 +15,17 @@ pub async fn delete_todo(
         Ok(_) => {
             htmx.trigger_event(
                 "message".to_string(),
-                Some(format!("Task with id {} was deleted", id).to_string()),
+                Some(format!("Task with id {} was deleted", id)),
                 Some(TriggerType::Standard),
             );
             htmx.trigger_event(
                 "message2".to_string(),
-                Some("Just showing you can trigger more than one event".to_string()),
+                Some("Just showing you can trigger more than one event".to_owned()),
                 None,
             );
             htmx.trigger_event(
                 "message".to_string(),
-                Some("Another event, just for fun".to_string()),
+                Some("Another event, just for fun".to_owned()),
                 Some(TriggerType::AfterSettle),
             );
             htmx.trigger_event("deleted".to_string(), None, None);

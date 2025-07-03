@@ -19,7 +19,7 @@ pub async fn update_todo(
 ) -> impl Responder {
     let ToDoStatus { completed } = form.0;
 
-    let status = if let None = completed {
+    let status = if completed.is_none() {
         Status::Pending
     } else {
         Status::Done
@@ -29,7 +29,7 @@ pub async fn update_todo(
         Ok(_) => {
             htmx.trigger_event(
                 "message".to_string(),
-                Some(format!("Task with id {} was set to {}", id, status).to_string()),
+                Some(format!("Task with id {} was set to {}", id, status)),
                 Some(TriggerType::Standard),
             );
             let todos = Todos::get_todos(&pool).await.unwrap_or_else(|_| {

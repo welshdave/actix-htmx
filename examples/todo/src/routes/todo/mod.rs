@@ -12,5 +12,5 @@ pub use put::*;
 #[derive(Template)]
 #[template(path = "todos.html")]
 pub struct TodosTemplate<'a> {
-    pub todos: &'a Vec<Todo>,
+    pub todos: &'a [Todo],
 }

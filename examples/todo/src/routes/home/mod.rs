@@ -8,5 +8,5 @@ pub use get::*;
 #[derive(Template)]
 #[template(path = "home.html")]
 pub struct HomeTemplate<'a> {
-    pub todos: &'a Vec<Todo>,
+    pub todos: &'a [Todo],
 }
