@@ -6,7 +6,7 @@ mod get;
 pub use get::*;
 
 #[derive(Template)]
-#[template(path = "../src/routes/home/home.html")]
+#[template(path = "home.html")]
 pub struct HomeTemplate<'a> {
     pub todos: &'a Vec<Todo>,
 }

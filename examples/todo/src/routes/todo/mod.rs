@@ -10,7 +10,7 @@ pub use post::*;
 pub use put::*;
 
 #[derive(Template)]
-#[template(path = "../src/routes/todo/todos.html")]
+#[template(path = "todos.html")]
 pub struct TodosTemplate<'a> {
     pub todos: &'a Vec<Todo>,
 }

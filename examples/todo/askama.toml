@@ -1,0 +1,7 @@
+[general]
+
+dirs = [
+    "templates",
+    "src/routes/home",
+    "src/routes/todo"
+]

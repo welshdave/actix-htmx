@@ -1,9 +1,8 @@
 use crate::domain::Todos;
-
 use crate::routes::{HomeTemplate, TodosTemplate};
+use crate::template_response::TemplateToResponse;
 use actix_htmx::Htmx;
-use actix_web::{web, HttpResponse};
-use askama_actix::TemplateToResponse;
+use actix_web::{web, HttpResponse, Responder};
 use sqlx::{Pool, Sqlite};
 
 #[derive(serde::Deserialize)]
@@ -15,18 +14,15 @@ pub async fn create_todo(
     htmx: Htmx,
     form: web::Form<NewTodo>,
     pool: web::Data<Pool<Sqlite>>,
-) -> HttpResponse {
+) -> impl Responder {
     let NewTodo { name } = form.0;
 
     match Todos::add_todo(&pool, &name).await {
         Ok(_) => {
-            let todos = match Todos::get_todos(&pool).await {
-                Ok(x) => x,
-                Err(_) => {
-                    println!("Problem fetching todos!");
-                    Vec::default()
-                }
-            };
+            let todos = Todos::get_todos(&pool).await.unwrap_or_else(|_| {
+                println!("Problem fetching todos!");
+                Vec::default()
+            });
 
             htmx.replace_url("/".to_string());
 
