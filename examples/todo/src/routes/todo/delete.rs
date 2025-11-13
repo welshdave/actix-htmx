@@ -14,23 +14,23 @@ pub async fn delete_todo(
     match Todos::delete_todo(&pool, *id).await {
         Ok(_) => {
             htmx.trigger_event(
-                "message".to_string(),
+                "message",
                 Some(format!("Task with id {} was deleted", id)),
                 Some(TriggerType::Standard),
             );
             htmx.trigger_event(
-                "message2".to_string(),
+                "message2",
                 Some("Just showing you can trigger more than one event".to_owned()),
                 None,
             );
             htmx.trigger_event(
-                "message".to_string(),
+                "message",
                 Some("Another event, just for fun".to_owned()),
                 Some(TriggerType::AfterSettle),
             );
-            htmx.trigger_event("deleted".to_string(), None, None);
-            htmx.trigger_event("event1".to_string(), None, Some(TriggerType::AfterSwap));
-            htmx.trigger_event("event2".to_string(), None, Some(TriggerType::AfterSwap));
+            htmx.trigger_event("deleted", None, None);
+            htmx.trigger_event("event1", None, Some(TriggerType::AfterSwap));
+            htmx.trigger_event("event2", None, Some(TriggerType::AfterSwap));
             let todos = Todos::get_todos(&pool).await.unwrap_or_else(|_| {
                 println!("Problem fetching todos!");
                 Vec::default()

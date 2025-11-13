@@ -24,7 +24,7 @@ pub async fn create_todo(
                 Vec::default()
             });
 
-            htmx.replace_url("/".to_string());
+            htmx.replace_url("/");
 
             if htmx.boosted {
                 let todo_template = TodosTemplate { todos: &todos };

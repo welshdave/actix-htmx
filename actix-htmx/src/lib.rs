@@ -69,8 +69,8 @@ mod tests {
             "/test",
             web::get().to(|htmx: Htmx| async move {
                 htmx.trigger_event(
-                    "test-event".to_string(),
-                    Some("test-value".to_string()),
+                    "test-event",
+                    Some("test-value".into()),
                     Some(TriggerType::Standard),
                 );
                 HttpResponse::Ok().finish()
@@ -101,11 +101,7 @@ mod tests {
         let app = test::init_service(App::new().wrap(HtmxMiddleware).route(
             "/test",
             web::get().to(|htmx: Htmx| async move {
-                htmx.trigger_event(
-                    "settle-event".to_string(),
-                    None,
-                    Some(TriggerType::AfterSettle),
-                );
+                htmx.trigger_event("settle-event", None, Some(TriggerType::AfterSettle));
                 HttpResponse::Ok().finish()
             }),
         ))
@@ -217,16 +213,8 @@ mod tests {
         let app = test::init_service(App::new().wrap(HtmxMiddleware).route(
             "/test",
             web::get().to(|htmx: Htmx| async move {
-                htmx.trigger_event(
-                    "event1".to_string(),
-                    Some("value1".to_string()),
-                    Some(TriggerType::Standard),
-                );
-                htmx.trigger_event(
-                    "event2".to_string(),
-                    Some("value2".to_string()),
-                    Some(TriggerType::Standard),
-                );
+                htmx.trigger_event("event1", Some("value1".into()), Some(TriggerType::Standard));
+                htmx.trigger_event("event2", Some("value2".into()), Some(TriggerType::Standard));
                 HttpResponse::Ok().finish()
             }),
         ))
@@ -259,18 +247,18 @@ mod tests {
             "/test",
             web::get().to(|htmx: Htmx| async move {
                 htmx.trigger_event(
-                    "standard".to_string(),
-                    Some("value1".to_string()),
+                    "standard",
+                    Some("value1".into()),
                     Some(TriggerType::Standard),
                 );
                 htmx.trigger_event(
-                    "after_settle".to_string(),
-                    Some("value2".to_string()),
+                    "after_settle",
+                    Some("value2".into()),
                     Some(TriggerType::AfterSettle),
                 );
                 htmx.trigger_event(
-                    "after_swap".to_string(),
-                    Some("value3".to_string()),
+                    "after_swap",
+                    Some("value3".into()),
                     Some(TriggerType::AfterSwap),
                 );
                 HttpResponse::Ok().finish()
@@ -326,7 +314,7 @@ mod tests {
         let app = test::init_service(App::new().wrap(HtmxMiddleware).route(
             "/test",
             web::get().to(|htmx: Htmx| async move {
-                htmx.redirect("/new-location".to_string());
+                htmx.redirect("/new-location");
                 HttpResponse::Ok().finish()
             }),
         ))
@@ -353,7 +341,7 @@ mod tests {
         let app = test::init_service(App::new().wrap(HtmxMiddleware).route(
             "/test",
             web::get().to(|htmx: Htmx| async move {
-                htmx.redirect_with_swap("/new-location".to_string());
+                htmx.redirect_with_swap("/new-location");
                 HttpResponse::Ok().finish()
             }),
         ))
@@ -380,8 +368,8 @@ mod tests {
         let app = test::init_service(App::new().wrap(HtmxMiddleware).route(
             "/test",
             web::get().to(|htmx: Htmx| async move {
-                htmx.push_url("/pushed-url".to_string());
-                htmx.replace_url("/replaced-url".to_string());
+                htmx.push_url("/pushed-url");
+                htmx.replace_url("/replaced-url");
                 HttpResponse::Ok().finish()
             }),
         ))
@@ -413,8 +401,8 @@ mod tests {
         let app = test::init_service(App::new().wrap(HtmxMiddleware).route(
             "/test",
             web::get().to(|htmx: Htmx| async move {
-                htmx.retarget("#new-target".to_string());
-                htmx.reselect("#new-selection".to_string());
+                htmx.retarget("#new-target");
+                htmx.reselect("#new-selection");
                 HttpResponse::Ok().finish()
             }),
         ))

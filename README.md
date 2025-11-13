@@ -130,7 +130,7 @@ use actix_web::{HttpResponse, Responder};
 async fn create_item(htmx: Htmx) -> impl Responder {
     // Trigger a custom JavaScript event
     htmx.trigger_event(
-        "itemCreated".to_string(),
+        "itemCreated",
         Some(r#"{"id": 123, "name": "New Item"}"#.to_string()),
         Some(TriggerType::Standard)
     );
@@ -139,10 +139,10 @@ async fn create_item(htmx: Htmx) -> impl Responder {
     htmx.reswap(SwapType::OuterHtml);
     
     // Update the URL without navigation
-    htmx.push_url("/items/123".to_string());
+    htmx.push_url("/items/123");
     
     // Redirect after successful creation
-    htmx.redirect("/items".to_string());
+    htmx.redirect("/items");
     
     HttpResponse::Ok().body("<div>Item created!</div>")
 }
@@ -159,21 +159,21 @@ use actix_web::{HttpResponse, Responder};
 async fn handler(htmx: Htmx) -> impl Responder {
     // Trigger immediately when response is received
     htmx.trigger_event(
-        "dataLoaded".to_string(),
+        "dataLoaded",
         None,
         Some(TriggerType::Standard)
     );
     
     // Trigger after content is swapped into DOM
     htmx.trigger_event(
-        "contentSwapped".to_string(),
+        "contentSwapped",
         Some(r#"{"timestamp": "2024-01-01"}"#.to_string()),
         Some(TriggerType::AfterSwap)
     );
     
     // Trigger after htmx has settled (animations complete, etc.)
     htmx.trigger_event(
-        "pageReady".to_string(),
+        "pageReady",
         None,
         Some(TriggerType::AfterSettle)
     );
@@ -190,19 +190,19 @@ use actix_web::{HttpResponse, Responder};
 
 async fn advanced_handler(htmx: Htmx) -> impl Responder {
     // Change the target element for this response
-    htmx.retarget("#different-element".to_string());
+    htmx.retarget("#different-element");
     
     // Select specific content from response
-    htmx.reselect(".important-content".to_string());
+    htmx.reselect(".important-content");
     
     // Replace URL in browser history (no new history entry)
-    htmx.replace_url("/new-path".to_string());
+    htmx.replace_url("/new-path");
     
     // Refresh the entire page
     htmx.refresh();
     
     // Redirect using htmx (no full page reload)
-    htmx.redirect_with_swap("/dashboard".to_string());
+    htmx.redirect_with_swap("/dashboard");
     
     HttpResponse::Ok().body(r#"
         <div class="important-content">

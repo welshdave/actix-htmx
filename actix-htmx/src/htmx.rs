@@ -47,7 +47,7 @@ use crate::headers::{RequestHeaders, ResponseHeaders};
 /// async fn create(htmx: Htmx) -> impl Responder {
 ///     // Trigger a client-side event
 ///     htmx.trigger_event(
-///         "itemCreated".to_string(),
+///         "itemCreated",
 ///         Some(r#"{"id": 123}"#.to_string()),
 ///         Some(TriggerType::Standard)
 ///     );
@@ -56,7 +56,7 @@ use crate::headers::{RequestHeaders, ResponseHeaders};
 ///     htmx.reswap(SwapType::OuterHtml);
 ///
 ///     // Redirect after the request
-///     htmx.redirect("/items".to_string());
+///     htmx.redirect("/items");
 ///
 ///     // ...
 ///     HttpResponse::Ok()
@@ -271,11 +271,11 @@ impl Htmx {
     ///
     /// fn handler(htmx: Htmx) {
     ///     // Simple event without data
-    ///     htmx.trigger_event("item-deleted".to_string(), None, None);
+    ///     htmx.trigger_event("item-deleted", None, None);
     ///
     ///     // Event with JSON data
     ///     htmx.trigger_event(
-    ///         "notification".to_string(),
+    ///         "notification",
     ///         Some(r#"{"message": "Success!", "type": "info"}"#.to_string()),
     ///         Some(TriggerType::Standard)
     ///     );
@@ -283,10 +283,11 @@ impl Htmx {
     /// ```
     pub fn trigger_event(
         &self,
-        name: String,
+        name: impl Into<String>,
         message: Option<String>,
         trigger_type: Option<TriggerType>,
     ) {
+        let name = name.into();
         let trigger_type = trigger_type.unwrap_or(TriggerType::Standard);
         match trigger_type {
             TriggerType::Standard => {
@@ -338,22 +339,22 @@ impl Htmx {
     ///
     /// This sets the `hx-redirect` header, which causes htmx to perform a client-side redirect
     /// to the specified URL with a full page reload.
-    pub fn redirect(&self, path: String) {
+    pub fn redirect(&self, path: impl Into<String>) {
         self.inner
             .borrow_mut()
             .response_headers
-            .insert(ResponseHeaders::HX_REDIRECT.to_string(), path);
+            .insert(ResponseHeaders::HX_REDIRECT.to_string(), path.into());
     }
 
     /// Redirect to a new page using htmx (no full page reload).
     ///
     /// This sets the `hx-location` header, which causes htmx to make a new request
     /// to the specified URL and swap the response into the current page.
-    pub fn redirect_with_swap(&self, path: String) {
+    pub fn redirect_with_swap(&self, path: impl Into<String>) {
         self.inner
             .borrow_mut()
             .response_headers
-            .insert(ResponseHeaders::HX_LOCATION.to_string(), path);
+            .insert(ResponseHeaders::HX_LOCATION.to_string(), path.into());
     }
 
     /// Refresh the current page.
@@ -370,22 +371,22 @@ impl Htmx {
     ///
     /// This sets the `hx-push-url` header, which updates the browser's address bar
     /// and adds an entry to the browser history.
-    pub fn push_url(&self, path: String) {
+    pub fn push_url(&self, path: impl Into<String>) {
         self.inner
             .borrow_mut()
             .response_headers
-            .insert(ResponseHeaders::HX_PUSH_URL.to_string(), path);
+            .insert(ResponseHeaders::HX_PUSH_URL.to_string(), path.into());
     }
 
     /// Replace the current URL in the browser history.
     ///
     /// This sets the `hx-replace-url` header, which updates the browser's address bar
     /// without adding a new entry to the browser history.
-    pub fn replace_url(&self, path: String) {
+    pub fn replace_url(&self, path: impl Into<String>) {
         self.inner
             .borrow_mut()
             .response_headers
-            .insert(ResponseHeaders::HX_REPLACE_URL.to_string(), path);
+            .insert(ResponseHeaders::HX_REPLACE_URL.to_string(), path.into());
     }
 
     /// Change how htmx swaps content into the target element.
@@ -403,22 +404,22 @@ impl Htmx {
     ///
     /// This sets the `hx-retarget` header, which changes which element
     /// the response content will be swapped into.
-    pub fn retarget(&self, selector: String) {
-        self.inner.borrow_mut().response_headers.insert(
-            ResponseHeaders::HX_RETARGET.to_string(),
-            selector.to_string(),
-        );
+    pub fn retarget(&self, selector: impl Into<String>) {
+        self.inner
+            .borrow_mut()
+            .response_headers
+            .insert(ResponseHeaders::HX_RETARGET.to_string(), selector.into());
     }
 
     /// Select specific content from the response to swap.
     ///
     /// This sets the `hx-reselect` header, which allows you to select
     /// a subset of the response content to swap into the target.
-    pub fn reselect(&self, selector: String) {
-        self.inner.borrow_mut().response_headers.insert(
-            ResponseHeaders::HX_RESELECT.to_string(),
-            selector.to_string(),
-        );
+    pub fn reselect(&self, selector: impl Into<String>) {
+        self.inner
+            .borrow_mut()
+            .response_headers
+            .insert(ResponseHeaders::HX_RESELECT.to_string(), selector.into());
     }
 
     pub(crate) fn get_triggers(

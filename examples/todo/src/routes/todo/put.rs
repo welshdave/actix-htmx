@@ -28,7 +28,7 @@ pub async fn update_todo(
     match Todos::update_todo(&pool, status, *id).await {
         Ok(_) => {
             htmx.trigger_event(
-                "message".to_string(),
+                "message",
                 Some(format!("Task with id {} was set to {}", id, status)),
                 Some(TriggerType::Standard),
             );
