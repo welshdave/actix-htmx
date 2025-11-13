@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3](https://github.com/welshdave/actix-htmx/compare/actix-htmx-v0.3.2...actix-htmx-v0.3.3) - 2025-11-13
+
+### Other
+
+- clean up use of to_string()
+- update dependencies
+
 ## [0.3.2](https://github.com/welshdave/actix-htmx/compare/actix-htmx-v0.3.1...actix-htmx-v0.3.2) - 2025-06-29
 
 ### Other
