@@ -1,4 +1,4 @@
-use crate::{headers::ResponseHeaders, Htmx, TriggerType};
+use crate::{headers::ResponseHeaders, Htmx, TriggerPayload, TriggerType};
 
 use actix_web::http::header::{HeaderName, HeaderValue};
 use actix_web::{
@@ -8,6 +8,7 @@ use actix_web::{
 use futures_util::future::LocalBoxFuture;
 use indexmap::IndexMap;
 use log::warn;
+use serde_json::{Map, Value};
 use std::future::{ready, Ready};
 
 /// A middleware for Actix Web that handles htmx specific headers and triggers.
@@ -118,46 +119,38 @@ where
 
             let (req, mut res) = res.into_parts();
 
-            let trigger_json = |trigger_map: IndexMap<String, Option<String>>| -> String {
-                let mut triggers = String::new();
-                triggers.push('{');
-                trigger_map.iter().for_each(|(key, value)| {
-                    if let Some(value) = value {
-                        if value.trim().starts_with('{') {
-                            triggers.push_str(&format!("\"{}\": {},", key, value));
-                        } else {
-                            triggers.push_str(&format!("\"{}\": \"{}\",", key, value));
-                        }
-                    } else {
-                        triggers.push_str(&format!("\"{}\": null,", key));
+            let trigger_json =
+                |trigger_map: &IndexMap<String, Option<TriggerPayload>>| -> Option<String> {
+                    let mut object = Map::new();
+                    for (key, value) in trigger_map.iter() {
+                        let json_value = match value {
+                            Some(payload) => payload.as_json_value(),
+                            None => Value::Null,
+                        };
+                        object.insert(key.clone(), json_value);
                     }
-                });
-                triggers.pop();
-                triggers.push('}');
-                triggers
-            };
+                    serde_json::to_string(&Value::Object(object)).ok()
+                };
 
-            let simple_header = |trigger_map: IndexMap<String, Option<String>>| -> String {
-                let mut triggers = trigger_map
-                    .iter()
-                    .map(|(key, _)| key.to_string() + ",")
-                    .collect::<String>();
-                triggers.pop();
-                triggers
+            let simple_header = |trigger_map: &IndexMap<String, Option<TriggerPayload>>| -> String {
+                trigger_map.keys().cloned().collect::<Vec<_>>().join(",")
             };
 
             let mut process_trigger_header =
                 |header_name: HeaderName,
-                 trigger_map: IndexMap<String, Option<String>>,
+                 trigger_map: IndexMap<String, Option<TriggerPayload>>,
                  simple: bool| {
                     if trigger_map.is_empty() {
                         return;
                     }
 
                     let triggers = if simple {
-                        simple_header(trigger_map)
+                        simple_header(&trigger_map)
+                    } else if let Some(json) = trigger_json(&trigger_map) {
+                        json
                     } else {
-                        trigger_json(trigger_map)
+                        warn!("Failed to serialize HX-Trigger header");
+                        return;
                     };
 
                     if let Ok(value) = HeaderValue::from_str(&triggers) {

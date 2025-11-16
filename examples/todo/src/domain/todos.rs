@@ -36,12 +36,15 @@ impl Todos {
         Ok(todos)
     }
 
-    pub async fn add_todo(pool: &sqlx::Pool<sqlx::Sqlite>, name: &str) -> Result<(), sqlx::Error> {
-        let new_id = Uuid::new_v4();
-
+    pub async fn add_todo(
+        pool: &sqlx::Pool<sqlx::Sqlite>,
+        name: &str,
+    ) -> Result<Option<Uuid>, sqlx::Error> {
         if name.trim().is_empty() {
-            return Ok(());
+            return Ok(None);
         }
+
+        let new_id = Uuid::new_v4();
 
         sqlx::query!(
             r#"
@@ -55,7 +58,7 @@ impl Todos {
         .execute(pool)
         .await?;
 
-        Ok(())
+        Ok(Some(new_id))
     }
 
     pub async fn delete_todo(pool: &sqlx::Pool<sqlx::Sqlite>, id: Uuid) -> Result<(), sqlx::Error> {

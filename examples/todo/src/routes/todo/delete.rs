@@ -1,7 +1,7 @@
 use crate::domain::Todos;
 use crate::routes::TodosTemplate;
 use crate::template_response::TemplateToResponse;
-use actix_htmx::{Htmx, TriggerType};
+use actix_htmx::{Htmx, TriggerPayload, TriggerType};
 use actix_web::{web, HttpResponse, Responder};
 use sqlx::{Pool, Sqlite};
 use uuid::Uuid;
@@ -15,17 +15,22 @@ pub async fn delete_todo(
         Ok(_) => {
             htmx.trigger_event(
                 "message",
-                Some(format!("Task with id {} was deleted", id)),
+                Some(TriggerPayload::text(format!(
+                    "Task with id {} was deleted",
+                    id
+                ))),
                 Some(TriggerType::Standard),
             );
             htmx.trigger_event(
                 "message2",
-                Some("Just showing you can trigger more than one event".to_owned()),
+                Some(TriggerPayload::text(
+                    "Just showing you can trigger more than one event",
+                )),
                 None,
             );
             htmx.trigger_event(
                 "message",
-                Some("Another event, just for fun".to_owned()),
+                Some(TriggerPayload::text("Another event, just for fun")),
                 Some(TriggerType::AfterSettle),
             );
             htmx.trigger_event("deleted", None, None);

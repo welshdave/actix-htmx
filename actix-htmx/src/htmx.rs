@@ -9,7 +9,10 @@ use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
 
-use crate::headers::{RequestHeaders, ResponseHeaders};
+use crate::{
+    headers::{RequestHeaders, ResponseHeaders},
+    trigger_payload::TriggerPayload,
+};
 
 /// Provides access to htmx request information and methods for setting htmx response headers.
 ///
@@ -41,14 +44,16 @@ use crate::headers::{RequestHeaders, ResponseHeaders};
 /// Set htmx response headers for client-side behaviour:
 /// ```rust
 /// use actix_web::{post, HttpResponse, Responder};
-/// use actix_htmx::{Htmx, TriggerType, SwapType};
+/// use actix_htmx::{Htmx, SwapType, TriggerPayload, TriggerType};
+/// use serde_json::json;
 ///
 /// #[post("/create")]
 /// async fn create(htmx: Htmx) -> impl Responder {
 ///     // Trigger a client-side event
+///     let payload = TriggerPayload::json(json!({ "id": 123 })).unwrap();
 ///     htmx.trigger_event(
 ///         "itemCreated",
-///         Some(r#"{"id": 123}"#.to_string()),
+///         Some(payload),
 ///         Some(TriggerType::Standard)
 ///     );
 ///
@@ -134,9 +139,9 @@ impl fmt::Display for SwapType {
 }
 
 struct HtmxInner {
-    standard_triggers: IndexMap<String, Option<String>>,
-    after_settle_triggers: IndexMap<String, Option<String>>,
-    after_swap_triggers: IndexMap<String, Option<String>>,
+    standard_triggers: IndexMap<String, Option<TriggerPayload>>,
+    after_settle_triggers: IndexMap<String, Option<TriggerPayload>>,
+    after_swap_triggers: IndexMap<String, Option<TriggerPayload>>,
     response_headers: IndexMap<String, String>,
     request_headers: IndexMap<String, DataType>,
     simple_trigger: HashMap<TriggerType, bool>,
@@ -261,22 +266,27 @@ impl Htmx {
     /// # Arguments
     ///
     /// * `name` - The name of the event to trigger
-    /// * `message` - Optional data to send with the event (typically JSON)
+    /// * `payload` - Optional data to send with the event (typically JSON)
     /// * `trigger_type` - When to trigger the event (defaults to `Standard`)
     ///
     /// # Example
     ///
     /// ```rust
-    /// use actix_htmx::{Htmx, TriggerType};
+    /// use actix_htmx::{Htmx, TriggerPayload, TriggerType};
     ///
     /// fn handler(htmx: Htmx) {
     ///     // Simple event without data
     ///     htmx.trigger_event("item-deleted", None, None);
     ///
     ///     // Event with JSON data
+    ///     let payload = TriggerPayload::json(serde_json::json!({
+    ///         "message": "Success!",
+    ///         "type": "info"
+    ///     })).unwrap();
+    ///
     ///     htmx.trigger_event(
     ///         "notification",
-    ///         Some(r#"{"message": "Success!", "type": "info"}"#.to_string()),
+    ///         Some(payload),
     ///         Some(TriggerType::Standard)
     ///     );
     /// }
@@ -284,55 +294,24 @@ impl Htmx {
     pub fn trigger_event(
         &self,
         name: impl Into<String>,
-        message: Option<String>,
+        payload: Option<TriggerPayload>,
         trigger_type: Option<TriggerType>,
     ) {
         let name = name.into();
         let trigger_type = trigger_type.unwrap_or(TriggerType::Standard);
-        match trigger_type {
-            TriggerType::Standard => {
-                if message.is_some() {
-                    _ = self
-                        .inner
-                        .borrow_mut()
-                        .simple_trigger
-                        .entry(TriggerType::Standard)
-                        .or_insert(false);
-                }
-                self.inner
-                    .borrow_mut()
-                    .standard_triggers
-                    .insert(name, message);
-            }
-            TriggerType::AfterSettle => {
-                if message.is_some() {
-                    _ = self
-                        .inner
-                        .borrow_mut()
-                        .simple_trigger
-                        .entry(TriggerType::AfterSettle)
-                        .or_insert(false);
-                }
-                self.inner
-                    .borrow_mut()
-                    .after_settle_triggers
-                    .insert(name, message);
-            }
-            TriggerType::AfterSwap => {
-                if message.is_some() {
-                    _ = self
-                        .inner
-                        .borrow_mut()
-                        .simple_trigger
-                        .entry(TriggerType::AfterSwap)
-                        .or_insert(false);
-                }
-                self.inner
-                    .borrow_mut()
-                    .after_swap_triggers
-                    .insert(name, message);
-            }
+        let mut inner = self.inner.borrow_mut();
+
+        if payload.is_some() {
+            inner.simple_trigger.insert(trigger_type.clone(), false);
         }
+
+        let target_map = match trigger_type {
+            TriggerType::Standard => &mut inner.standard_triggers,
+            TriggerType::AfterSettle => &mut inner.after_settle_triggers,
+            TriggerType::AfterSwap => &mut inner.after_swap_triggers,
+        };
+
+        target_map.insert(name, payload);
     }
 
     /// Redirect to a new page with a full page reload.
@@ -425,7 +404,7 @@ impl Htmx {
     pub(crate) fn get_triggers(
         &self,
         trigger_type: TriggerType,
-    ) -> IndexMap<String, Option<String>> {
+    ) -> IndexMap<String, Option<TriggerPayload>> {
         match trigger_type {
             TriggerType::Standard => self.inner.borrow().standard_triggers.clone(),
             TriggerType::AfterSettle => self.inner.borrow().after_settle_triggers.clone(),

@@ -1,8 +1,9 @@
 use crate::domain::Todos;
 use crate::routes::{HomeTemplate, TodosTemplate};
 use crate::template_response::TemplateToResponse;
-use actix_htmx::Htmx;
+use actix_htmx::{Htmx, TriggerPayload};
 use actix_web::{web, HttpResponse, Responder};
+use serde_json::json;
 use sqlx::{Pool, Sqlite};
 
 #[derive(serde::Deserialize)]
@@ -18,7 +19,15 @@ pub async fn create_todo(
     let NewTodo { name } = form.0;
 
     match Todos::add_todo(&pool, &name).await {
-        Ok(_) => {
+        Ok(created) => {
+            if let Some(new_id) = created {
+                let payload = TriggerPayload::from_value(json!({
+                    "id": new_id,
+                    "name": name
+                }));
+                htmx.trigger_event("todoCreated", Some(payload), None);
+            }
+
             let todos = Todos::get_todos(&pool).await.unwrap_or_else(|_| {
                 println!("Problem fetching todos!");
                 Vec::default()

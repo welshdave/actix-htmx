@@ -1,7 +1,7 @@
 use crate::domain::{Status, Todos};
 use crate::routes::TodosTemplate;
 use crate::template_response::TemplateToResponse;
-use actix_htmx::{Htmx, TriggerType};
+use actix_htmx::{Htmx, TriggerPayload, TriggerType};
 use actix_web::{web, HttpResponse, Responder};
 use sqlx::{Pool, Sqlite};
 use uuid::Uuid;
@@ -29,7 +29,10 @@ pub async fn update_todo(
         Ok(_) => {
             htmx.trigger_event(
                 "message",
-                Some(format!("Task with id {} was set to {}", id, status)),
+                Some(TriggerPayload::text(format!(
+                    "Task with id {} was set to {}",
+                    id, status
+                ))),
                 Some(TriggerType::Standard),
             );
             let todos = Todos::get_todos(&pool).await.unwrap_or_else(|_| {

@@ -46,10 +46,12 @@
 mod headers;
 mod htmx;
 mod middleware;
+mod trigger_payload;
 
 pub use self::{
     htmx::{Htmx, SwapType, TriggerType},
     middleware::HtmxMiddleware,
+    trigger_payload::TriggerPayload,
 };
 
 #[cfg(test)]
@@ -62,6 +64,7 @@ mod tests {
         test::{self, TestRequest},
         web, App, HttpResponse,
     };
+    use serde_json::{json, Value};
 
     #[actix_web::test]
     async fn test_htmx_middleware_basic() {
@@ -70,7 +73,7 @@ mod tests {
             web::get().to(|htmx: Htmx| async move {
                 htmx.trigger_event(
                     "test-event",
-                    Some("test-value".into()),
+                    Some(TriggerPayload::text("test-value")),
                     Some(TriggerType::Standard),
                 );
                 HttpResponse::Ok().finish()
@@ -90,10 +93,8 @@ mod tests {
             .headers()
             .get(HeaderName::from_static(ResponseHeaders::HX_TRIGGER))
             .unwrap();
-        assert!(trigger_header
-            .to_str()
-            .unwrap()
-            .contains(r#""test-event": "test-value""#));
+        let trigger_json: Value = serde_json::from_str(trigger_header.to_str().unwrap()).unwrap();
+        assert_eq!(trigger_json["test-event"], "test-value");
     }
 
     #[actix_web::test]
@@ -213,8 +214,16 @@ mod tests {
         let app = test::init_service(App::new().wrap(HtmxMiddleware).route(
             "/test",
             web::get().to(|htmx: Htmx| async move {
-                htmx.trigger_event("event1", Some("value1".into()), Some(TriggerType::Standard));
-                htmx.trigger_event("event2", Some("value2".into()), Some(TriggerType::Standard));
+                htmx.trigger_event(
+                    "event1",
+                    Some(TriggerPayload::text("value1")),
+                    Some(TriggerType::Standard),
+                );
+                htmx.trigger_event(
+                    "event2",
+                    Some(TriggerPayload::text("value2")),
+                    Some(TriggerType::Standard),
+                );
                 HttpResponse::Ok().finish()
             }),
         ))
@@ -248,17 +257,17 @@ mod tests {
             web::get().to(|htmx: Htmx| async move {
                 htmx.trigger_event(
                     "standard",
-                    Some("value1".into()),
+                    Some(TriggerPayload::text("value1")),
                     Some(TriggerType::Standard),
                 );
                 htmx.trigger_event(
                     "after_settle",
-                    Some("value2".into()),
+                    Some(TriggerPayload::text("value2")),
                     Some(TriggerType::AfterSettle),
                 );
                 htmx.trigger_event(
                     "after_swap",
-                    Some("value3".into()),
+                    Some(TriggerPayload::text("value3")),
                     Some(TriggerType::AfterSwap),
                 );
                 HttpResponse::Ok().finish()
@@ -307,6 +316,102 @@ mod tests {
             .unwrap();
         assert!(after_swap_header.contains("after_swap"));
         assert!(after_swap_header.contains("value3"));
+    }
+
+    #[actix_web::test]
+    async fn test_multiple_simple_triggers() {
+        let app = test::init_service(App::new().wrap(HtmxMiddleware).route(
+            "/simple",
+            web::get().to(|htmx: Htmx| async move {
+                htmx.trigger_event("event1", None, None);
+                htmx.trigger_event("event2", None, None);
+                HttpResponse::Ok().finish()
+            }),
+        ))
+        .await;
+
+        let req = TestRequest::get()
+            .uri("/simple")
+            .insert_header((HeaderName::from_static("hx-request"), "true"))
+            .to_request();
+
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_success());
+
+        let trigger_header = resp
+            .headers()
+            .get(HeaderName::from_static(ResponseHeaders::HX_TRIGGER))
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
+
+        assert_eq!(trigger_header, "event1,event2");
+    }
+
+    #[actix_web::test]
+    async fn test_string_payload_that_looks_like_json() {
+        let app = test::init_service(App::new().wrap(HtmxMiddleware).route(
+            "/test",
+            web::get().to(|htmx: Htmx| async move {
+                htmx.trigger_event(
+                    "looks-like-json",
+                    Some(TriggerPayload::text("{not: \"json\"")),
+                    None,
+                );
+                HttpResponse::Ok().finish()
+            }),
+        ))
+        .await;
+
+        let req = TestRequest::get()
+            .uri("/test")
+            .insert_header((HeaderName::from_static("hx-request"), "true"))
+            .to_request();
+
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_success());
+
+        let trigger_header = resp
+            .headers()
+            .get(HeaderName::from_static(ResponseHeaders::HX_TRIGGER))
+            .unwrap();
+
+        let trigger_json: Value = serde_json::from_str(trigger_header.to_str().unwrap()).unwrap();
+        assert_eq!(
+            trigger_json["looks-like-json"],
+            Value::String("{not: \"json\"".to_string())
+        );
+    }
+
+    #[actix_web::test]
+    async fn test_json_payload_trigger() {
+        let app = test::init_service(App::new().wrap(HtmxMiddleware).route(
+            "/test",
+            web::get().to(|htmx: Htmx| async move {
+                let payload = TriggerPayload::json(json!({"id": 1, "complete": false})).unwrap();
+                htmx.trigger_event("json-event", Some(payload), None);
+                HttpResponse::Ok().finish()
+            }),
+        ))
+        .await;
+
+        let req = TestRequest::get()
+            .uri("/test")
+            .insert_header((HeaderName::from_static("hx-request"), "true"))
+            .to_request();
+
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_success());
+
+        let trigger_header = resp
+            .headers()
+            .get(HeaderName::from_static(ResponseHeaders::HX_TRIGGER))
+            .unwrap();
+
+        let trigger_json: Value = serde_json::from_str(trigger_header.to_str().unwrap()).unwrap();
+        assert_eq!(trigger_json["json-event"]["id"], 1);
+        assert_eq!(trigger_json["json-event"]["complete"], false);
     }
 
     #[actix_web::test]

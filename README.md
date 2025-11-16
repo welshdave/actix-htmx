@@ -124,14 +124,16 @@ async fn handler(htmx: Htmx) -> impl Responder {
 ### Controlling Response Behaviour
 
 ```rust
-use actix_htmx::{Htmx, SwapType, TriggerType};
+use actix_htmx::{Htmx, SwapType, TriggerPayload, TriggerType};
 use actix_web::{HttpResponse, Responder};
+use serde_json::json;
 
 async fn create_item(htmx: Htmx) -> impl Responder {
     // Trigger a custom JavaScript event
+    let payload = TriggerPayload::json(json!({ "id": 123, "name": "New Item" })).unwrap();
     htmx.trigger_event(
         "itemCreated",
-        Some(r#"{"id": 123, "name": "New Item"}"#.to_string()),
+        Some(payload),
         Some(TriggerType::Standard)
     );
     
@@ -153,8 +155,9 @@ async fn create_item(htmx: Htmx) -> impl Responder {
 htmx supports triggering custom events at different lifecycle stages:
 
 ```rust
-use actix_htmx::{Htmx, TriggerType};
+use actix_htmx::{Htmx, TriggerPayload, TriggerType};
 use actix_web::{HttpResponse, Responder};
+use serde_json::json;
 
 async fn handler(htmx: Htmx) -> impl Responder {
     // Trigger immediately when response is received
@@ -165,9 +168,10 @@ async fn handler(htmx: Htmx) -> impl Responder {
     );
     
     // Trigger after content is swapped into DOM
+    let swapped_payload = TriggerPayload::json(json!({ "timestamp": "2024-01-01" })).unwrap();
     htmx.trigger_event(
         "contentSwapped",
-        Some(r#"{"timestamp": "2024-01-01"}"#.to_string()),
+        Some(swapped_payload),
         Some(TriggerType::AfterSwap)
     );
     
@@ -185,7 +189,7 @@ async fn handler(htmx: Htmx) -> impl Responder {
 ### Advanced Response Control
 
 ```rust
-use actix_htmx:{Htmx;
+use actix_htmx::Htmx;
 use actix_web::{HttpResponse, Responder};
 
 async fn advanced_handler(htmx: Htmx) -> impl Responder {
