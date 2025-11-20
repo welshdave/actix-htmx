@@ -52,8 +52,9 @@ async fn main() -> std::io::Result<()> {
 2. **Use the `Htmx` extractor** in your handlers:
 
 ```rust
-use actix_htmx::Htmx;
+use actix_htmx::{Htmx, HxLocation, SwapType};
 use actix_web::{HttpResponse, Responder};
+use serde_json::json;
 
 async fn index(htmx: Htmx) -> impl Responder {
     if htmx.is_htmx {
@@ -205,8 +206,13 @@ async fn advanced_handler(htmx: Htmx) -> impl Responder {
     // Refresh the entire page
     htmx.refresh();
     
-    // Redirect using htmx (no full page reload)
-    htmx.redirect_with_swap("/dashboard");
+    // Redirect using htmx (no full page reload) with a custom HX-Location payload
+    htmx.redirect_with_location(
+        HxLocation::new("/dashboard")
+            .target("#content")
+            .swap(SwapType::OuterHtml)
+            .values_json(json!({ "message": "Welcome back!" }))
+    );
     
     HttpResponse::Ok().body(r#"
         <div class="important-content">

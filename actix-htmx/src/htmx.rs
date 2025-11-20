@@ -12,6 +12,7 @@ use std::rc::Rc;
 use crate::{
     headers::{RequestHeaders, ResponseHeaders},
     trigger_payload::TriggerPayload,
+    HxLocation,
 };
 
 /// Provides access to htmx request information and methods for setting htmx response headers.
@@ -334,6 +335,18 @@ impl Htmx {
             .borrow_mut()
             .response_headers
             .insert(ResponseHeaders::HX_LOCATION.to_string(), path.into());
+    }
+
+    /// Redirect using a fully customized HX-Location object.
+    ///
+    /// This lets you control additional behaviour like target selectors,
+    /// swap strategies, or custom values for the follow-up request.
+    /// Build the payload with [`HxLocation`](crate::HxLocation).
+    pub fn redirect_with_location(&self, location: HxLocation) {
+        self.inner.borrow_mut().response_headers.insert(
+            ResponseHeaders::HX_LOCATION.to_string(),
+            location.into_header_value(),
+        );
     }
 
     /// Refresh the current page.

@@ -45,11 +45,13 @@
 
 mod headers;
 mod htmx;
+mod location;
 mod middleware;
 mod trigger_payload;
 
 pub use self::{
     htmx::{Htmx, SwapType, TriggerType},
+    location::HxLocation,
     middleware::HtmxMiddleware,
     trigger_payload::TriggerPayload,
 };
@@ -57,7 +59,7 @@ pub use self::{
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::headers::ResponseHeaders;
+    use crate::{headers::ResponseHeaders, HxLocation};
     use actix_web::http::header::HeaderValue;
     use actix_web::{
         http::header::HeaderName,
@@ -466,6 +468,54 @@ mod tests {
             .unwrap();
 
         assert_eq!(location_header.to_str().unwrap(), "/new-location");
+    }
+
+    #[actix_web::test]
+    async fn test_htmx_redirect_with_location() {
+        let app = test::init_service(App::new().wrap(HtmxMiddleware).route(
+            "/test",
+            web::get().to(|htmx: Htmx| async move {
+                let location = HxLocation::new("/builder")
+                    .target("#content")
+                    .source("#button")
+                    .event("custom")
+                    .swap(SwapType::OuterHtml)
+                    .handler("handleResponse")
+                    .select(".fragment")
+                    .header("X-Test", "1")
+                    .values_json(json!({"id": 42}))
+                    .push_path("/history-path")
+                    .replace("/replace-path");
+                htmx.redirect_with_location(location);
+                HttpResponse::Ok().finish()
+            }),
+        ))
+        .await;
+
+        let req = TestRequest::get()
+            .uri("/test")
+            .insert_header((HeaderName::from_static("hx-request"), "true"))
+            .to_request();
+
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_success());
+
+        let location_header = resp
+            .headers()
+            .get(HeaderName::from_static(ResponseHeaders::HX_LOCATION))
+            .unwrap();
+        let parsed: Value = serde_json::from_str(location_header.to_str().unwrap()).unwrap();
+        assert_eq!(parsed["path"], "/builder");
+        assert_eq!(parsed["target"], "#content");
+        assert_eq!(parsed["source"], "#button");
+        assert_eq!(parsed["event"], "custom");
+        assert_eq!(parsed["swap"], "outerHTML");
+        assert_eq!(parsed["handler"], "handleResponse");
+        assert_eq!(parsed["select"], ".fragment");
+        assert_eq!(parsed["headers"]["X-Test"], "1");
+        assert_eq!(parsed["values"]["id"], 42);
+        assert_eq!(parsed["push"], "/history-path");
+        assert_eq!(parsed["replace"], "/replace-path");
     }
 
     #[actix_web::test]
