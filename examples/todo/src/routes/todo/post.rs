@@ -26,6 +26,7 @@ pub async fn create_todo(
                     "name": name
                 }));
                 htmx.trigger_event("todoCreated", Some(payload), None);
+                htmx.trigger_event("created", None, None);
             }
 
             let todos = Todos::get_todos(&pool).await.unwrap_or_else(|_| {
