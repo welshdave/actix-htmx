@@ -6,11 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.3](https://github.com/welshdave/actix-htmx/compare/actix-htmx-v0.3.2...actix-htmx-v0.3.3) - 2025-11-22
+## [0.4.0](https://github.com/welshdave/actix-htmx/compare/actix-htmx-v0.3.2...actix-htmx-v0.3.3) - 2025-11-22
 
 ### Other
 
-- better handling of json values for HxLocation builder
 - Handle more complex HX-Location response headers
 - More robust handling of trigger payloads
 - clean up use of to_string()
