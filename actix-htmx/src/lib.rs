@@ -66,7 +66,13 @@ mod tests {
         test::{self, TestRequest},
         web, App, HttpResponse,
     };
+    use serde::Serialize;
     use serde_json::{json, Value};
+
+    #[derive(Serialize)]
+    struct LocationValues {
+        id: u32,
+    }
 
     #[actix_web::test]
     async fn test_htmx_middleware_basic() {
@@ -483,7 +489,8 @@ mod tests {
                     .handler("handleResponse")
                     .select(".fragment")
                     .header("X-Test", "1")
-                    .values_json(json!({"id": 42}))
+                    .values(LocationValues { id: 42 })
+                    .expect("static payload should serialize")
                     .push_path("/history-path")
                     .replace("/replace-path");
                 htmx.redirect_with_location(location);

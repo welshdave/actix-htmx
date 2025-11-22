@@ -108,10 +108,13 @@ impl HxLocation {
         self
     }
 
-    /// Provide custom values accessible to the follow-up request.
-    pub fn values_json(mut self, values: Value) -> Self {
-        self.values = Some(values);
-        self
+    /// Serialize any value into the HX-Location `values` object.
+    pub fn values<T>(mut self, values: T) -> serde_json::Result<Self>
+    where
+        T: Serialize,
+    {
+        self.values = Some(serde_json::to_value(values)?);
+        Ok(self)
     }
 
     /// Prevent htmx from pushing a new history entry.
@@ -134,5 +137,33 @@ impl HxLocation {
 
     pub(crate) fn into_header_value(self) -> String {
         serde_json::to_string(&self).expect("HxLocation serialization failed")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Serialize)]
+    struct Payload<'a> {
+        id: u32,
+        name: &'a str,
+    }
+
+    #[test]
+    fn values_accepts_serializable_types() {
+        let location = HxLocation::new("/path")
+            .values(Payload {
+                id: 7,
+                name: "demo",
+            })
+            .expect("serialization should succeed");
+
+        let serialized = location.into_header_value();
+        let parsed: Value = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(parsed["path"], "/path");
+        assert_eq!(parsed["values"]["id"], 7);
+        assert_eq!(parsed["values"]["name"], "demo");
     }
 }

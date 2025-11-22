@@ -207,12 +207,12 @@ async fn advanced_handler(htmx: Htmx) -> impl Responder {
     htmx.refresh();
     
     // Redirect using htmx (no full page reload) with a custom HX-Location payload
-    htmx.redirect_with_location(
-        HxLocation::new("/dashboard")
-            .target("#content")
-            .swap(SwapType::OuterHtml)
-            .values_json(json!({ "message": "Welcome back!" }))
-    );
+    let location = HxLocation::new("/dashboard")
+        .target("#content")
+        .swap(SwapType::OuterHtml)
+        .values(json!({ "message": "Welcome back!" }))
+        .expect("static payload should serialize");
+    htmx.redirect_with_location(location);
     
     HttpResponse::Ok().body(r#"
         <div class="important-content">
