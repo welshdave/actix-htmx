@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1](https://github.com/welshdave/actix-htmx/compare/actix-htmx-v0.4.0...actix-htmx-v0.4.1) - 2025-11-23
+
+### Other
+
+- Fix version in README
+
 ## [0.4.0](https://github.com/welshdave/actix-htmx/compare/actix-htmx-v0.3.2...actix-htmx-v0.3.3) - 2025-11-22
 
 ### Other
