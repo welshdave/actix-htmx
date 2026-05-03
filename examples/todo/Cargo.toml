@@ -15,7 +15,7 @@ name = "example-todo"
 actix-files = "0.6"
 actix-htmx = { path = "../../actix-htmx" }
 actix-web = { version = "4", default-features = false, features = [ "macros" ] }
-askama = { version = "0.14" }
+askama = { version = "0.15" }
 anyhow = "1"
 sqlx = { version = "0.8", default-features = false, features = [ "runtime-tokio-rustls", "macros", "sqlite", "uuid", "chrono", "migrate"] }
 uuid = { version = "1.17", features = [ "v4", "fast-rng", "macro-diagnostics", "serde" ] }
